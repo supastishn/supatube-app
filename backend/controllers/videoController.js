@@ -36,6 +36,14 @@ const uploadVideo = async (req, res) => {
         video.thumbnail_stream_url = `/api/videos/${video.id}/thumbnail`;
         res.status(201).json(video);
 
+        // Notify subscribers about new video
+        try {
+            const { notifyNewVideoToSubscribers } = require('../services/notificationService');
+            notifyNewVideoToSubscribers({ id: video.id, user_id: video.user_id, title: video.title });
+        } catch (e) {
+            console.error('Failed to send new video notifications:', e);
+        }
+
         // Fire-and-forget enqueue of transcoding job (no await to avoid delaying response)
         try {
             const { enqueueTranscode } = require('../services/transcodeService');
@@ -98,7 +106,24 @@ const getAllVideos = async (req, res) => {
 
     try {
         const result = await pool.query(query, queryParams);
-        res.json(result.rows);
+        // Build nested tree: top-level comments with replies array
+        const rows = result.rows;
+        const byId = new Map();
+        for (const row of rows) {
+            row.replies = [];
+            byId.set(row.id, row);
+        }
+        const roots = [];
+        for (const row of rows) {
+            if (row.parent_comment_id) {
+                const parent = byId.get(row.parent_comment_id);
+                if (parent) parent.replies.push(row);
+                else roots.push(row); // orphaned safety
+            } else {
+                roots.push(row);
+            }
+        }
+        res.json(roots);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching videos' });
@@ -169,8 +194,16 @@ const getCommentsForVideo = async (req, res) => {
             return res.json([]);
         }
 
+        const queryParams = [id];
+        if (req.user) queryParams.push(req.user.userId);
         const result = await pool.query(
-            'SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.video_id = $1 ORDER BY c.created_at DESC',
+            `SELECT c.*, 
+                    u.username,
+                    (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id)::int AS likes_count,
+                    ${req.user ? `EXISTS(SELECT 1 FROM comment_likes cl2 WHERE cl2.comment_id = c.id AND cl2.user_id = $2)` : 'false'} AS user_has_liked
+             FROM comments c JOIN users u ON c.user_id = u.id
+             WHERE c.video_id = $1
+             ORDER BY c.created_at ASC`,
             [id]
         );
         res.json(result.rows);
@@ -182,7 +215,7 @@ const getCommentsForVideo = async (req, res) => {
 
 const postComment = async (req, res) => {
     const { id: videoId } = req.params;
-    const { comment } = req.body;
+    const { comment, parentCommentId } = req.body;
     const { userId } = req.user;
 
     if (!comment || !comment.trim()) {
@@ -197,14 +230,34 @@ const postComment = async (req, res) => {
         if (video.comments_enabled === false) return res.status(403).json({ error: 'Comments disabled' });
 
         const result = await pool.query(
-            'INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3) RETURNING *',
-            [videoId, userId, comment.trim()]
+            'INSERT INTO comments (video_id, user_id, parent_comment_id, comment) VALUES ($1, $2, $3, $4) RETURNING *',
+            [videoId, userId, parentCommentId || null, comment.trim()]
         );
         const newComment = result.rows[0];
 
         // Attach username to the new comment for the response
         const userResult = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
         newComment.username = userResult.rows[0].username;
+
+        // If reply to a comment, notify parent comment author
+        if (newComment.parent_comment_id) {
+            const parentRes = await pool.query('SELECT id, user_id FROM comments WHERE id = $1', [newComment.parent_comment_id]);
+            if (parentRes.rowCount) {
+                const parentComment = { ...parentRes.rows[0], video_id: Number(videoId) };
+                try {
+                    const { notifyCommentReply } = require('../services/notificationService');
+                    notifyCommentReply(parentComment, { id: newComment.id, user_id: userId, video_id: Number(videoId), comment: newComment.comment });
+                } catch (e) { console.error('Failed to notify comment reply:', e); }
+            }
+        }
+
+        // Notify video owner of new top-level comment
+        if (!newComment.parent_comment_id) {
+            try {
+                const { notifyNewCommentOnVideo } = require('../services/notificationService');
+                notifyNewCommentOnVideo({ id: Number(videoId), user_id: video.user_id }, userId, newComment.id, newComment.comment);
+            } catch (e) { console.error('Failed to notify new comment:', e); }
+        }
 
         res.status(201).json(newComment);
     } catch (err) {

@@ -37,7 +37,4 @@ router.route('/:id/comments')
 router.route('/:id/like')
     .post(authenticateToken, likeVideo);
 
-router.route('/:id/like')
-    .post(authenticateToken, likeVideo);
-
 module.exports = router;

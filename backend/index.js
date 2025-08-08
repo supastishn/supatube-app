@@ -1,15 +1,17 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
-const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const morgan = require('morgan');
 const apiRoutes = require('./routes');
+const { startLiveServer } = require('./services/liveStreamServer');
+const { setupLiveChat } = require('./ws/liveChat');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 
 // --- Middleware ---
@@ -49,6 +51,11 @@ app.get('/', (req, res) => {
 
 app.use('/api', apiRoutes);
 
-app.listen(PORT, () => {
+// Start RTMP/HLS live server
+startLiveServer();
+// Start WebSocket chat
+setupLiveChat(server);
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
