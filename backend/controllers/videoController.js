@@ -1,0 +1,142 @@
+const pool = require('../config/db');
+
+const uploadVideo = async (req, res) => {
+    const { title, description } = req.body;
+    const { userId } = req.user;
+    const videoFile = req.files.video ? req.files.video[0] : null;
+    const thumbnailFile = req.files.thumbnail ? req.files.thumbnail[0] : null;
+
+    if (!title || !videoFile) {
+        return res.status(400).json({ error: 'Title and video file are required' });
+    }
+
+    const videoUrl = `/uploads/${videoFile.filename}`;
+    const thumbnailUrl = thumbnailFile ? `/uploads/${thumbnailFile.filename}` : null;
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO videos (title, description, user_id, video_url, thumbnail_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [title, description, userId, videoUrl, thumbnailUrl]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error uploading video' });
+    }
+};
+
+const getAllVideos = async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT v.*, u.username as channel,
+            (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count
+            FROM videos v
+            JOIN users u ON v.user_id = u.id
+            ORDER BY v.created_at DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching videos' });
+    }
+};
+
+const getVideoById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Use a transaction to safely increment views and fetch video data
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            await client.query('UPDATE videos SET views = views + 1 WHERE id = $1', [id]);
+            const videoResult = await client.query(`
+                SELECT v.*, u.username as channel,
+                (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count
+                FROM videos v
+                JOIN users u ON v.user_id = u.id
+                WHERE v.id = $1
+            `, [id]);
+            await client.query('COMMIT');
+
+            if (videoResult.rows.length === 0) {
+                return res.status(404).send('Video not found');
+            }
+            res.json(videoResult.rows[0]);
+        } catch(e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching video' });
+    }
+};
+
+const getCommentsForVideo = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.video_id = $1 ORDER BY c.created_at DESC',
+            [id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching comments' });
+    }
+};
+
+const postComment = async (req, res) => {
+    const { id: videoId } = req.params;
+    const { comment } = req.body;
+    const { userId } = req.user;
+
+    if (!comment) {
+        return res.status(400).send('Comment is required');
+    }
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO comments (video_id, user_id, comment) VALUES ($1, $2, $3) RETURNING *',
+            [videoId, userId, comment]
+        );
+        const newComment = result.rows[0];
+
+        // Attach username to the new comment for the response
+        const userResult = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
+        newComment.username = userResult.rows[0].username;
+
+        res.status(201).json(newComment);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error posting comment' });
+    }
+};
+
+const likeVideo = async (req, res) => {
+    const { id: videoId } = req.params;
+    const { userId } = req.user;
+
+    try {
+        // Using ON CONFLICT DO NOTHING to prevent duplicate likes and errors
+        await pool.query(
+            'INSERT INTO likes (video_id, user_id) VALUES ($1, $2) ON CONFLICT (video_id, user_id) DO NOTHING',
+            [videoId, userId]
+        );
+        res.status(201).send({ message: 'Like added' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error liking video' });
+    }
+};
+
+module.exports = {
+    uploadVideo,
+    getAllVideos,
+    getVideoById,
+    getCommentsForVideo,
+    postComment,
+    likeVideo,
+};
