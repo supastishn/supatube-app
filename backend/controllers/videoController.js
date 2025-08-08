@@ -1,4 +1,6 @@
 const pool = require('../config/db');
+const fs = require('fs').promises;
+const path = require('path');
 
 const uploadVideo = async (req, res) => {
     const { title, description } = req.body;
@@ -132,10 +134,104 @@ const likeVideo = async (req, res) => {
     }
 };
 
+const updateVideo = async (req, res) => {
+    const { id: videoId } = req.params;
+    const { userId } = req.user;
+    const { title, description } = req.body;
+
+    if (title === undefined && description === undefined) {
+        return res.status(400).json({ error: 'At least one field (title or description) is required for update.' });
+    }
+
+    try {
+        const videoResult = await pool.query('SELECT user_id FROM videos WHERE id = $1', [videoId]);
+        if (videoResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+        if (videoResult.rows[0].user_id !== userId) {
+            return res.status(403).json({ error: 'You are not authorized to update this video' });
+        }
+
+        const fieldsToUpdate = [];
+        const values = [];
+        let paramIndex = 1;
+
+        if (title !== undefined) {
+            fieldsToUpdate.push(`title = $${paramIndex++}`);
+            values.push(title);
+        }
+
+        if (description !== undefined) {
+            fieldsToUpdate.push(`description = $${paramIndex++}`);
+            values.push(description);
+        }
+        
+        values.push(videoId);
+
+        const query = `UPDATE videos SET ${fieldsToUpdate.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+
+        const updatedResult = await pool.query(query, values);
+
+        res.json(updatedResult.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error updating video' });
+    }
+};
+
+const deleteVideo = async (req, res) => {
+    const { id: videoId } = req.params;
+    const { userId } = req.user;
+
+    try {
+        const videoResult = await pool.query('SELECT user_id, video_url, thumbnail_url FROM videos WHERE id = $1', [videoId]);
+        if (videoResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+
+        const video = videoResult.rows[0];
+
+        if (video.user_id !== userId) {
+            return res.status(403).json({ error: 'You are not authorized to delete this video' });
+        }
+
+        // Delete video and thumbnail files
+        if (video.video_url) {
+            const videoPath = path.resolve(__dirname, '..', 'uploads', path.basename(video.video_url));
+            try {
+                await fs.unlink(videoPath);
+            } catch (err) {
+                if (err.code !== 'ENOENT') {
+                    console.error(`Error deleting video file ${videoPath}:`, err);
+                }
+            }
+        }
+        if (video.thumbnail_url) {
+            const thumbnailPath = path.resolve(__dirname, '..', 'uploads', path.basename(video.thumbnail_url));
+             try {
+                await fs.unlink(thumbnailPath);
+            } catch (err) {
+                 if (err.code !== 'ENOENT') {
+                    console.error(`Error deleting thumbnail file ${thumbnailPath}:`, err);
+                 }
+            }
+        }
+
+        await pool.query('DELETE FROM videos WHERE id = $1', [videoId]);
+
+        res.status(200).json({ message: 'Video deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error deleting video' });
+    }
+};
+
 module.exports = {
     uploadVideo,
     getAllVideos,
     getVideoById,
+    updateVideo,
+    deleteVideo,
     getCommentsForVideo,
     postComment,
     likeVideo,

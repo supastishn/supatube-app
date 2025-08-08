@@ -3,6 +3,8 @@ const {
     uploadVideo,
     getAllVideos,
     getVideoById,
+    updateVideo,
+    deleteVideo,
     getCommentsForVideo,
     postComment,
     likeVideo
@@ -17,7 +19,9 @@ router.route('/')
     .get(getAllVideos);
 
 router.route('/:id')
-    .get(getVideoById);
+    .get(getVideoById)
+    .put(authenticateToken, updateVideo)
+    .delete(authenticateToken, deleteVideo);
 
 router.route('/:id/comments')
     .get(getCommentsForVideo)
