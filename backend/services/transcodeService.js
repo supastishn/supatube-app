@@ -48,9 +48,8 @@ async function handleJob({ videoId, inputPath }) {
   const baseName = path.basename(inputPath, path.extname(inputPath));
 
   const outputs = [
-    { label: '480p', height: 480, vbitrate: '1200k', abitrate: '128k' },
-    { label: '720p', height: 720, vbitrate: '3000k', abitrate: '160k' },
-    { label: '1080p', height: 1080, vbitrate: '5000k', abitrate: '192k' },
+    // Single highly-compressed fallback at 480p 24fps
+    { label: '480p', height: 480, fps: 24, crf: 28, preset: 'slow', abitrate: '96k' },
   ];
 
   const outPaths = {};
@@ -58,7 +57,7 @@ async function handleJob({ videoId, inputPath }) {
   for (const variant of outputs) {
     const outFile = `${baseName}-${variant.label}.mp4`;
     const outFull = path.join(uploadsDir, outFile);
-    await transcodeVariant(inputPath, outFull, variant.height, variant.vbitrate, variant.abitrate);
+    await transcodeVariant(inputPath, outFull, variant);
     outPaths[variant.label] = `/uploads/${outFile}`;
   }
 
@@ -81,17 +80,21 @@ async function handleJob({ videoId, inputPath }) {
   );
 }
 
-function transcodeVariant(input, output, height, vbitrate, abitrate) {
+function transcodeVariant(input, output, variant) {
   return new Promise((resolve, reject) => {
+    const { height, fps, crf, preset, abitrate } = variant;
     ffmpeg(input)
       .videoCodec('libx264')
       .audioCodec('aac')
       .size(`?x${height}`)
+      .fps(fps)
       .outputOptions([
         '-movflags +faststart',
-        `-b:v ${vbitrate}`,
-        `-maxrate ${vbitrate}`,
-        '-bufsize 2M',
+        `-preset ${preset}`,
+        `-crf ${crf}`,
+        '-profile:v high',
+        '-level 4.1',
+        '-pix_fmt yuv420p',
         `-b:a ${abitrate}`
       ])
       .format('mp4')

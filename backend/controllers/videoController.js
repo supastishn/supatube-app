@@ -229,6 +229,13 @@ const postComment = async (req, res) => {
         if (video.visibility === 'private' && video.user_id !== userId) return res.status(403).json({ error: 'Cannot comment on a private video' });
         if (video.comments_enabled === false) return res.status(403).json({ error: 'Comments disabled' });
 
+        // If replying, ensure parent exists and belongs to same video
+        if (parentCommentId) {
+            const parent = await pool.query('SELECT id, video_id FROM comments WHERE id = $1', [parentCommentId]);
+            if (parent.rowCount === 0) return res.status(400).json({ error: 'Parent comment not found' });
+            if (String(parent.rows[0].video_id) !== String(videoId)) return res.status(400).json({ error: 'Parent comment does not belong to this video' });
+        }
+
         const result = await pool.query(
             'INSERT INTO comments (video_id, user_id, parent_comment_id, comment) VALUES ($1, $2, $3, $4) RETURNING *',
             [videoId, userId, parentCommentId || null, comment.trim()]
@@ -431,13 +438,13 @@ const streamVideo = async (req, res) => {
             return res.status(403).json({ error: 'This video is private' });
         }
 
-        if (video.processing_status !== 'ready' && !video.video_480p_url && !video.video_720p_url && !video.video_1080p_url) {
+        if (video.processing_status !== 'ready' && !video.video_480p_url) {
             res.setHeader('Retry-After', '30');
             return res.status(425).json({ error: 'Video is still processing' });
         }
 
         // Choose best available rendition. If processing, fall back to original.
-        let fileUrl = video.video_1080p_url || video.video_720p_url || video.video_480p_url || video.video_url;
+        let fileUrl = video.video_480p_url || video.video_url;
         const filePath = path.resolve(__dirname, '..', 'uploads', path.basename(fileUrl));
         let stat;
         try {
