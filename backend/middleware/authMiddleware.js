@@ -16,4 +16,23 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-module.exports = { authenticateToken };
+const optionalAuthenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token == null) {
+        return next();
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            // We can ignore invalid tokens for optional authentication
+            console.error('JWT verification error for optional auth:', err.message);
+        } else {
+            req.user = user;
+        }
+        next();
+    });
+};
+
+module.exports = { authenticateToken, optionalAuthenticateToken };

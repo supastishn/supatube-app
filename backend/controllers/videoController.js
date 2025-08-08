@@ -28,14 +28,25 @@ const uploadVideo = async (req, res) => {
 };
 
 const getAllVideos = async (req, res) => {
+    const { userId } = req.query;
+
+    let query = `
+        SELECT v.*, u.username as channel,
+        (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count
+        FROM videos v
+        JOIN users u ON v.user_id = u.id
+    `;
+    const queryParams = [];
+
+    if (userId) {
+        query += ' WHERE v.user_id = $1';
+        queryParams.push(userId);
+    }
+
+    query += ' ORDER BY v.created_at DESC';
+
     try {
-        const result = await pool.query(`
-            SELECT v.*, u.username as channel,
-            (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count
-            FROM videos v
-            JOIN users u ON v.user_id = u.id
-            ORDER BY v.created_at DESC
-        `);
+        const result = await pool.query(query, queryParams);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -45,24 +56,36 @@ const getAllVideos = async (req, res) => {
 
 const getVideoById = async (req, res) => {
     const { id } = req.params;
+    const userId = req.user ? req.user.userId : null;
+
     try {
         // Use a transaction to safely increment views and fetch video data
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
             await client.query('UPDATE videos SET views = views + 1 WHERE id = $1', [id]);
-            const videoResult = await client.query(`
+            
+            const videoQuery = `
                 SELECT v.*, u.username as channel,
-                (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count
+                (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count,
+                ${userId ? 'EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $2)' : 'false'} as user_has_liked
                 FROM videos v
                 JOIN users u ON v.user_id = u.id
                 WHERE v.id = $1
-            `, [id]);
+            `;
+
+            const queryParams = [id];
+            if (userId) {
+                queryParams.push(userId);
+            }
+
+            const videoResult = await client.query(videoQuery, queryParams);
             await client.query('COMMIT');
 
             if (videoResult.rows.length === 0) {
                 return res.status(404).send('Video not found');
             }
+            
             res.json(videoResult.rows[0]);
         } catch(e) {
             await client.query('ROLLBACK');
@@ -121,16 +144,32 @@ const likeVideo = async (req, res) => {
     const { id: videoId } = req.params;
     const { userId } = req.user;
 
+    const client = await pool.connect();
     try {
-        // Using ON CONFLICT DO NOTHING to prevent duplicate likes and errors
-        await pool.query(
-            'INSERT INTO likes (video_id, user_id) VALUES ($1, $2) ON CONFLICT (video_id, user_id) DO NOTHING',
+        await client.query('BEGIN');
+
+        const likeResult = await client.query(
+            'SELECT id FROM likes WHERE video_id = $1 AND user_id = $2',
             [videoId, userId]
         );
-        res.status(201).send({ message: 'Like added' });
+
+        if (likeResult.rows.length > 0) {
+            // Like exists, so delete it (unlike)
+            await client.query('DELETE FROM likes WHERE id = $1', [likeResult.rows[0].id]);
+            await client.query('COMMIT');
+            res.status(200).json({ message: 'Like removed' });
+        } else {
+            // Like does not exist, so add it (like)
+            await client.query('INSERT INTO likes (video_id, user_id) VALUES ($1, $2)', [videoId, userId]);
+            await client.query('COMMIT');
+            res.status(201).json({ message: 'Like added' });
+        }
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error(err);
-        res.status(500).json({ error: 'Error liking video' });
+        res.status(500).json({ error: 'Error toggling video like' });
+    } finally {
+        client.release();
     }
 };
 

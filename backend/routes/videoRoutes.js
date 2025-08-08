@@ -9,7 +9,7 @@ const {
     postComment,
     likeVideo
 } = require('../controllers/videoController');
-const { authenticateToken } = require('../middleware/authMiddleware');
+const { authenticateToken, optionalAuthenticateToken } = require('../middleware/authMiddleware');
 const upload = require('../config/multer');
 
 const router = express.Router();
@@ -19,7 +19,7 @@ router.route('/')
     .get(getAllVideos);
 
 router.route('/:id')
-    .get(getVideoById)
+    .get(optionalAuthenticateToken, getVideoById)
     .put(authenticateToken, updateVideo)
     .delete(authenticateToken, deleteVideo);
 
