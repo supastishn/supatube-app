@@ -26,6 +26,13 @@ async function processNext() {
     await handleJob(job);
   } catch (e) {
     console.error('Transcode job failed', e);
+    try {
+      if (job && job.videoId) {
+        await pool.query("UPDATE videos SET processing_status = 'failed' WHERE id = $1", [job.videoId]);
+      }
+    } catch (dbErr) {
+      console.error('Failed to mark video as failed:', dbErr);
+    }
   } finally {
     processing = false;
     // Continue with next job
@@ -54,6 +61,10 @@ async function handleJob({ videoId, inputPath }) {
     await transcodeVariant(inputPath, outFull, variant.height, variant.vbitrate, variant.abitrate);
     outPaths[variant.label] = `/uploads/${outFile}`;
   }
+
+  // Clean up original upload if desired to save space; keep it for now
+  // Optionally, generate a poster/thumbnail frame if no thumbnail provided
+
 
   // Probe duration
   const duration = await probeDuration(inputPath);
