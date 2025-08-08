@@ -106,24 +106,7 @@ const getAllVideos = async (req, res) => {
 
     try {
         const result = await pool.query(query, queryParams);
-        // Build nested tree: top-level comments with replies array
-        const rows = result.rows;
-        const byId = new Map();
-        for (const row of rows) {
-            row.replies = [];
-            byId.set(row.id, row);
-        }
-        const roots = [];
-        for (const row of rows) {
-            if (row.parent_comment_id) {
-                const parent = byId.get(row.parent_comment_id);
-                if (parent) parent.replies.push(row);
-                else roots.push(row); // orphaned safety
-            } else {
-                roots.push(row);
-            }
-        }
-        res.json(roots);
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching videos' });
@@ -135,27 +118,17 @@ const getVideoById = async (req, res) => {
     const userId = req.user ? req.user.userId : null;
 
     try {
-        // Use a transaction to safely increment views and fetch video data
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
-            // Increment views using a write that cannot underflow or skip video existence
-            const updateRes = await client.query('UPDATE videos SET views = views + 1 WHERE id = $1 RETURNING id', [id]);
-            if (updateRes.rowCount === 0) {
-                await client.query('ROLLBACK');
-                return res.status(404).send('Video not found');
-            }
-            
+
             const videoQuery = `
                 SELECT v.*, u.username as channel,
                 (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count,
                 ${userId ? 'EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $2)' : 'false'} as user_has_liked
                 FROM videos v
                 JOIN users u ON v.user_id = u.id
-                WHERE v.id = $1 AND (
-                    v.visibility IN ('public','unlisted') OR
-                    (v.visibility = 'private' AND v.user_id = ${userId ? '$2' : 'NULL'})
-                )
+                WHERE v.id = $1
             `;
 
             const queryParams = [id];
@@ -164,12 +137,28 @@ const getVideoById = async (req, res) => {
             }
 
             const videoResult = await client.query(videoQuery, queryParams);
+
+            if (videoResult.rowCount === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({ error: 'Video not found' });
+            }
+
+            const video = videoResult.rows[0];
+
+            if (video.visibility === 'private' && video.user_id !== userId) {
+                await client.query('ROLLBACK');
+                return res.status(403).json({ error: 'This video is private' });
+            }
+
+            // Increment views now that we know user is authorized to view
+            await client.query('UPDATE videos SET views = views + 1 WHERE id = $1', [id]);
             await client.query('COMMIT');
 
-            res.json(videoResult.rows[0]);
-        } catch(e) {
+            video.views++;
+            res.json(video);
+        } catch (e) {
             await client.query('ROLLBACK');
-            throw e;
+            throw e; // re-throw to be caught by outer catch
         } finally {
             client.release();
         }
