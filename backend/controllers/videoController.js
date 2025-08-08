@@ -507,6 +507,50 @@ const streamThumbnail = async (req, res) => {
     }
 };
 
+const getRecommendedVideos = async (req, res) => {
+    const { id: videoId } = req.params;
+    const requesterId = req.user ? req.user.userId : null;
+
+    try {
+        const sourceVideoResult = await pool.query('SELECT user_id, title, visibility FROM videos WHERE id = $1', [videoId]);
+        if (sourceVideoResult.rowCount === 0) {
+            return res.status(404).json({ error: 'Source video not found' });
+        }
+        const sourceVideo = sourceVideoResult.rows[0];
+
+        if (sourceVideo.visibility === 'private' && sourceVideo.user_id !== requesterId) {
+            return res.status(403).json({ error: 'Cannot get recommendations for a private video' });
+        }
+
+        const query = `
+            WITH source_video AS (
+                SELECT user_id, search_vector, title
+                FROM videos
+                WHERE id = $1
+            )
+            SELECT
+                v.id, v.title, v.thumbnail_url, v.views, v.created_at, u.username as channel,
+                (
+                    (CASE WHEN v.user_id = (SELECT user_id FROM source_video) THEN 1 ELSE 0 END) * 1.5 +
+                    ts_rank(v.search_vector, websearch_to_tsquery('english', (SELECT title FROM source_video))) +
+                    (LN(v.views + 1) * 0.1)
+                ) as recommendation_score
+            FROM videos v
+            JOIN users u ON v.user_id = u.id
+            WHERE
+                v.id != $1 AND v.visibility = 'public'
+            ORDER BY recommendation_score DESC
+            LIMIT 20
+        `;
+
+        const result = await pool.query(query, [videoId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error getting recommendations:', err);
+        res.status(500).json({ error: 'Error fetching recommendations' });
+    }
+};
+
 module.exports = {
     uploadVideo,
     getAllVideos,
@@ -518,4 +562,5 @@ module.exports = {
     likeVideo,
     streamVideo,
     streamThumbnail,
+    getRecommendedVideos,
 };

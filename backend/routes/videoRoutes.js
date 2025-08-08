@@ -9,7 +9,8 @@ const {
     postComment,
     likeVideo,
     streamVideo,
-    streamThumbnail
+    streamThumbnail,
+    getRecommendedVideos
 } = require('../controllers/videoController');
 const { authenticateToken, optionalAuthenticateToken } = require('../middleware/authMiddleware');
 const upload = require('../config/multer');
@@ -25,6 +26,8 @@ router.route('/:id')
     .get(optionalAuthenticateToken, getVideoById)
     .patch(authenticateToken, updateVideo)
     .delete(authenticateToken, deleteVideo);
+
+router.get('/:id/recommendations', optionalAuthenticateToken, getRecommendedVideos);
 
 router.get('/:id/stream', optionalAuthenticateToken, streamVideo);
 router.get('/:id/thumbnail', optionalAuthenticateToken, streamThumbnail);
