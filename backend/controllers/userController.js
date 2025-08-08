@@ -7,8 +7,11 @@ const registerUser = async (req, res) => {
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
   }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+  }
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const result = await pool.query(
       'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username',
       [username, hashedPassword]
@@ -42,7 +45,8 @@ const loginUser = async (req, res) => {
         }
 
         const token = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET, {
-            expiresIn: '1d',
+            expiresIn: '12h',
+            algorithm: 'HS256',
         });
 
         res.json({ token, user: { id: user.id, username: user.username } });
@@ -59,7 +63,11 @@ const getUserProfile = async (req, res) => {
         if (userResult.rows.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.json(userResult.rows[0]);
+
+        const subsCount = await pool.query('SELECT COUNT(*)::int AS count FROM subscriptions WHERE channel_id = $1', [req.user.userId]);
+        const profile = { ...userResult.rows[0], subscribers: subsCount.rows[0].count };
+
+        res.json(profile);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching user profile' });
