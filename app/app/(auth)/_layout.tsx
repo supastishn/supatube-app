@@ -9,7 +9,7 @@ export default function AuthLayout() {
     if (!loading && token) {
       router.replace('/');
     }
-  }, [token, loading]);
+  }, [token, loading, router]);
   return (
     <Stack>
       <Stack.Screen name="login" options={{ title: 'Login' }} />

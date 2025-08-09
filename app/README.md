@@ -1,6 +1,14 @@
-# Welcome to your Expo app 👋
+# YouTube-like Frontend (Expo)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This app is a YouTube-style client built with Expo + expo-router that integrates with the provided Express backend.
+
+## Features
+
+- Auth (register/login) using /api/users endpoints.
+- JWT stored securely via expo-secure-store and attached to requests.
+- Home: list of public videos from /api/videos.
+- Video Detail: fetch details /api/videos/:id, stream via /api/videos/:id/stream, like button (/api/videos/:id/like), comments list and posting (/api/videos/:id/comments).
+- Search screen using /api/search.
 
 ## Get started
 
@@ -13,6 +21,8 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 2. Start the app
 
    ```bash
+   # Optionally set your backend URL (defaults: Android emulator 10.0.2.2:3000; iOS/web localhost:3000)
+   export EXPO_PUBLIC_API_URL="http://localhost:3000"
    npx expo start
    ```
 

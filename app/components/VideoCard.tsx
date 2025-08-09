@@ -27,7 +27,7 @@ export default function VideoCard({ video }: { video: Video }) {
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]} />
             )}
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.title} numberOfLines={2}>{video.title}</Text>
               <Text style={styles.subtitle} numberOfLines={1}>{video.channel?.name || 'Unknown Channel'}</Text>
             </View>
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   card: { marginBottom: 16 },
   thumbnail: { width: '100%', aspectRatio: 16/9, backgroundColor: '#eee', borderRadius: 8 },
   thumbPlaceholder: { backgroundColor: '#ddd' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', paddingTop: 8 },
   avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#eee' },
   avatarPlaceholder: { backgroundColor: '#ddd' },
   title: { fontSize: 16, fontWeight: '600' },

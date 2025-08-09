@@ -10,7 +10,7 @@ export default function TabLayout() {
     if (!loading && !token) {
       router.replace('/(auth)/login');
     }
-  }, [token, loading]);
+  }, [token, loading, router]);
 
   return (
     <Tabs screenOptions={{ headerShown: false }}>

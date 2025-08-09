@@ -3,7 +3,6 @@ import { View, FlatList, RefreshControl, ActivityIndicator, StyleSheet, Text, Al
 import VideoCard, { Video } from '@/components/VideoCard';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const { loading: authLoading, token } = useAuth();
