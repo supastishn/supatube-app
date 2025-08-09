@@ -49,7 +49,13 @@ const loginUser = async (req, res) => {
             algorithm: 'HS256',
         });
 
-        res.json({ token, user: { id: user.id, username: user.username } });
+        // Get updated user info including name and avatar_url after registration/login
+        const updatedUserRes = await pool.query(
+          'SELECT id, username, name, avatar_url FROM users WHERE id = $1', 
+          [user.id]
+        );
+        const updatedUser = updatedUserRes.rows[0];
+        res.json({ token, user: updatedUser });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error logging in' });

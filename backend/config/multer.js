@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 });
 
 const allowedVideo = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
-const allowedImage = ['image/jpeg', 'image/png', 'image/webp'];
+const allowedAvatar = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 const fileFilter = (req, files, cb) => {
   // Multer field upload uses this per file; implementing as a wrapper
