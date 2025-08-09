@@ -12,11 +12,9 @@ if (process.env.NODE_ENV !== 'test') {
   startLiveServer();
 }
 
-// Start WebSocket chat
-setupLiveChat(server);
-
-// Start listening only if the script is run directly
-if (require.main === module) {
+// Start WebSocket chat and start listening only when not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  setupLiveChat(server);
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });

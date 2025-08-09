@@ -1,9 +1,6 @@
-const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { Client } = require('pg');
-
-let serverProcess;
 
 async function initDb() {
   try {
