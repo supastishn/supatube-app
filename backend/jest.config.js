@@ -4,5 +4,5 @@ module.exports = {
   testEnvironment: 'node',
   testTimeout: 45000,
   globalSetup: '<rootDir>/__tests__/setup/globalSetup.js',
-  globalTeardown: '<rootDir>/__tests__/setup/globalTeardown.js',
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup/setup-tests.js'],
 };

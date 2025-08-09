@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "pg-mem": "^2.8.2",
     "supertest": "^7.0.0"
   },
   "dependencies": {
