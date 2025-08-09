@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { Video, ResizeMode } from 'expo-video';
 import { videoStreamUrl } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
