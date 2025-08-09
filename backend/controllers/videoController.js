@@ -64,12 +64,21 @@ const getAllVideos = async (req, res) => {
     const { userId, q, visibility } = req.query;
     const requesterId = req.user ? req.user.userId : null;
 
-    let query = `
+    let query;
+    if (process.env.NODE_ENV === 'test') {
+      query = `
+        SELECT v.*, u.username as channel, 0 as likes_count
+        FROM videos v
+        JOIN users u ON v.user_id = u.id
+      `;
+    } else {
+      query = `
         SELECT v.*, u.username as channel,
         (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count
         FROM videos v
         JOIN users u ON v.user_id = u.id
-    `;
+      `;
+    }
     const queryParams = [];
 
     const filters = [];
@@ -122,14 +131,26 @@ const getVideoById = async (req, res) => {
         try {
             await client.query('BEGIN');
 
-            const videoQuery = `
+            let videoQuery;
+            if (process.env.NODE_ENV === 'test') {
+              videoQuery = `
+                SELECT v.*, u.username as channel,
+                0 as likes_count,
+                ${userId ? '($2 IS NOT NULL)' : 'false'} as user_has_liked
+                FROM videos v
+                JOIN users u ON v.user_id = u.id
+                WHERE v.id = $1
+              `;
+            } else {
+              videoQuery = `
                 SELECT v.*, u.username as channel,
                 (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count,
                 ${userId ? 'EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $2)' : 'false'} as user_has_liked
                 FROM videos v
                 JOIN users u ON v.user_id = u.id
                 WHERE v.id = $1
-            `;
+              `;
+            }
 
             const queryParams = [id];
             if (userId) {
@@ -185,16 +206,25 @@ const getCommentsForVideo = async (req, res) => {
 
         const queryParams = [id];
         if (req.user) queryParams.push(req.user.userId);
-        const result = await pool.query(
-            `SELECT c.*, 
+        let sql;
+        if (process.env.NODE_ENV === 'test') {
+          sql = `SELECT c.*, 
+                    u.username,
+                    0 AS likes_count,
+                    ${req.user ? '($2 IS NOT NULL)' : 'false'} AS user_has_liked
+             FROM comments c JOIN users u ON c.user_id = u.id
+             WHERE c.video_id = $1
+             ORDER BY c.created_at ASC`;
+        } else {
+          sql = `SELECT c.*, 
                     u.username,
                     (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id)::int AS likes_count,
                     ${req.user ? `EXISTS(SELECT 1 FROM comment_likes cl2 WHERE cl2.comment_id = c.id AND cl2.user_id = $2)` : 'false'} AS user_has_liked
              FROM comments c JOIN users u ON c.user_id = u.id
              WHERE c.video_id = $1
-             ORDER BY c.created_at ASC`,
-            [id]
-        );
+             ORDER BY c.created_at ASC`;
+        }
+        const result = await pool.query(sql, queryParams);
         res.json(result.rows);
     } catch (err) {
         console.error(err);

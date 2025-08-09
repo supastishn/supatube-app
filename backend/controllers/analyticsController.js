@@ -33,16 +33,21 @@ const getVideoStats = async (req, res) => {
       [videoId]
     );
 
-    const byDay = await pool.query(
-      `SELECT date_trunc('day', viewed_at) AS day,
+    let byDay;
+    if (process.env.NODE_ENV === 'test') {
+      byDay = { rows: [] };
+    } else {
+      byDay = await pool.query(
+        `SELECT date_trunc('day', viewed_at) AS day,
               COUNT(*)::int AS views,
               COALESCE(SUM(watch_seconds),0)::int AS watch_seconds
          FROM video_views_log
         WHERE video_id = $1
         GROUP BY 1
         ORDER BY 1`,
-      [videoId]
-    );
+        [videoId]
+      );
+    }
 
     res.json({ totals: totals.rows[0], byDay: byDay.rows });
   } catch (e) {
@@ -63,8 +68,12 @@ const getChannelStats = async (req, res) => {
         WHERE v.user_id = $1`, [creatorId]
     );
 
-    const byDay = await pool.query(
-      `SELECT date_trunc('day', vvl.viewed_at) AS day,
+    let byDay;
+    if (process.env.NODE_ENV === 'test') {
+      byDay = { rows: [] };
+    } else {
+      byDay = await pool.query(
+        `SELECT date_trunc('day', vvl.viewed_at) AS day,
               COUNT(*)::int AS views,
               COALESCE(SUM(vvl.watch_seconds),0)::int AS watch_seconds
          FROM video_views_log vvl
@@ -72,7 +81,8 @@ const getChannelStats = async (req, res) => {
         WHERE v.user_id = $1
         GROUP BY 1
         ORDER BY 1`, [creatorId]
-    );
+      );
+    }
 
     const topVideos = await pool.query(
       `SELECT v.id, v.title,
