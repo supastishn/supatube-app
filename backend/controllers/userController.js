@@ -80,6 +80,73 @@ const getUserProfile = async (req, res) => {
     }
 };
 
+const updateUserProfile = async (req, res) => {
+  const userId = req.user.userId;
+  const { name, username: newUsername } = req.body;
+  
+  try {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      if (name) {
+        await client.query(
+          'UPDATE users SET name = $1 WHERE id = $2',
+          [name, userId]
+        );
+      }
+
+      if (newUsername) {
+        const existing = await client.query(
+          'SELECT id FROM users WHERE username = $1 AND id <> $2',
+          [newUsername, userId]
+        );
+        if (existing.rowCount > 0) {
+          return res.status(409).json({ error: 'Username already exists' });
+        }
+        await client.query(
+          'UPDATE users SET username = $1 WHERE id = $2',
+          [newUsername, userId]
+        );
+      }
+
+      const result = await client.query(
+        'SELECT id, username, name, created_at FROM users WHERE id = $1',
+        [userId]
+      );
+      await client.query('COMMIT');
+      res.json(result.rows[0]);
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error updating profile' });
+  }
+};
+
+const uploadAvatar = async (req, res) => {
+  const userId = req.user.userId;
+  if (!req.file) {
+    return res.status(400).json({ error: 'Avatar file is required' });
+  }
+
+  const avatarUrl = `/uploads/${req.file.filename}`;
+  try {
+    await pool.query(
+      'UPDATE users SET avatar_url = $1 WHERE id = $2',
+      [avatarUrl, userId]
+    );
+    res.status(200).json({ avatar_url: avatarUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error updating avatar' });
+  }
+};
+
 module.exports = {
     registerUser,
     loginUser,
