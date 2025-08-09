@@ -22,9 +22,24 @@ export default function TabLayout() {
           </TouchableOpacity>
         ),
       }}>
-        <Tabs.Screen name="index" options={{ title: 'Home' }} />
-        <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
-        <Tabs.Screen name="search" options={{ title: 'Search' }} />
+        <Tabs.Screen name="index" options={{ 
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
+            <FontAwesome name="home" size={24} color={focused ? '#ff0000' : '#888'} />
+          ),
+        }} />
+        <Tabs.Screen name="explore" options={{ 
+          title: 'Explore',
+          tabBarIcon: ({ focused }) => (
+            <FontAwesome name="compass" size={24} color={focused ? '#ff0000' : '#888'} />
+          ),
+        }} />
+        <Tabs.Screen name="search" options={{ 
+          title: 'Search',
+          tabBarIcon: ({ focused }) => (
+            <FontAwesome name="search" size={24} color={focused ? '#ff0000' : '#888'} />
+          ),
+        }} />
       </Tabs>
       
       <ProfilePopover 
