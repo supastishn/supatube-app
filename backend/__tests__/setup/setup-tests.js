@@ -2,6 +2,11 @@ const { newDb } = require('pg-mem');
 const fs = require('fs');
 const path = require('path');
 
+// Mock transcode service to prevent async errors from ffmpeg
+jest.mock('../../services/transcodeService', () => ({
+  enqueueTranscode: jest.fn(),
+}));
+
 // Create an in-memory database
 const mockDb = newDb();
 
@@ -12,6 +17,8 @@ let schema = fs.readFileSync(sqlPath, 'utf8');
 schema = schema.replace(/-- index for full-text search[\s\S]+?EXECUTE FUNCTION videos_tsv_update\(\);/, '');
 // pg-mem also doesn't support the tsvector type.
 schema = schema.replace(/,\s*search_vector tsvector/, '');
+// pg-mem has issues with ON DELETE CASCADE constraints.
+schema = schema.replace(/ ON DELETE CASCADE/g, '');
 mockDb.public.none(schema);
 
 // Create a backup of the initial state, so we can restore it before each test
