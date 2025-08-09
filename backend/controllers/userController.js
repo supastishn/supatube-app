@@ -3,14 +3,14 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
 const registerUser = async (req, res) => {
-  const { username, password, name } = req.body;
-  if (!username || !password || !name) {
-    return res.status(400).json({ error: 'Username, name, and password are required' });
-  }
-  if (password.length < 8) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters long' });
-  }
   try {
+    const { username, password, name } = req.body;
+    if (!username || !password || !name) {
+      return res.status(400).json({ error: 'Username, name, and password are required' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
     const hashedPassword = await bcrypt.hash(password, 12);
     const result = await pool.query(
       'INSERT INTO users (username, password, name) VALUES ($1, $2, $3) RETURNING id, username, name, avatar_url',
