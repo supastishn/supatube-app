@@ -57,47 +57,5 @@ module.exports = async () => {
 
   await initDb();
 
-  // Start server as child process
-  const serverPath = path.join(__dirname, '..', '..', 'index.js');
-  serverProcess = spawn('node', [serverPath], {
-    env: { ...process.env },
-    stdio: ['ignore', 'pipe', 'pipe']
-  });
-
-  await new Promise((resolve, reject) => {
-    let ready = false;
-    const onData = (data) => {
-      const line = data.toString();
-      if (line.includes('Server is running on port')) {
-        ready = true;
-        cleanup();
-        resolve();
-      }
-    };
-    const onErr = (data) => {
-      // Allow logs but not crash
-      console.error('server err:', data.toString());
-    };
-    const cleanup = () => {
-      serverProcess.stdout.off('data', onData);
-      serverProcess.stderr.off('data', onErr);
-    };
-    serverProcess.stdout.on('data', onData);
-    serverProcess.stderr.on('data', onErr);
-    serverProcess.on('error', (err) => {
-      console.error('Failed to start server process:', err);
-      reject(err);
-    });
-    // Fallback timeout
-    setTimeout(() => {
-      if (!ready) {
-        cleanup();
-        reject(new Error('globalSetup: Server start timed out.'));
-      }
-    }, 5000);
-  });
-
-  // Save pid to a file for teardown
-  const pidPath = path.join(__dirname, 'server.pid');
-  fs.writeFileSync(pidPath, String(serverProcess.pid));
+  // The server is no longer started here. Tests will use the in-memory app instance.
 };
