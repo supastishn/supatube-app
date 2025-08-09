@@ -27,7 +27,8 @@ const backup = mockDb.backup();
 // Mock the db module to use our in-memory db pool
 jest.mock('../../config/db', () => new (mockDb.adapters.createPg().Pool)());
 
-// Restore the database before each test to ensure test isolation
-beforeEach(() => {
+// Restore the database before all tests in a file to ensure a clean slate,
+// while allowing sequential tests within a file to build on each other.
+beforeAll(() => {
   backup.restore();
 });
