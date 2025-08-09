@@ -1,10 +1,9 @@
-import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import React from 'react';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { Redirect, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 
 function RootNavigator() {
   const { token, loading } = useAuth();

@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const res = await api.post('/api/users/login', { email, password });
+      const res = await api.post('/api/users/login', { username: email, password });
       const token = res.token ?? res.data?.token ?? res?.accessToken ?? res?.jwt;
       if (!token) throw new Error('No token returned');
       await SecureStore.setItemAsync(TOKEN_KEY, token);
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = useCallback(async (name: string, email: string, password: string) => {
     try {
-      const res = await api.post('/api/users/register', { name, email, password });
+      const res = await api.post('/api/users/register', { username: email, name, password });
       const token = res.token ?? res.data?.token ?? res?.accessToken ?? res?.jwt;
       if (token) {
         await SecureStore.setItemAsync(TOKEN_KEY, token);

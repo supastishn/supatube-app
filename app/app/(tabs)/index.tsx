@@ -2,14 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, FlatList, RefreshControl, ActivityIndicator, StyleSheet, Text, Alert } from 'react-native';
 import VideoCard, { Video } from '@/components/VideoCard';
 import { api } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
 
 export default function HomeScreen() {
-  const { loading: authLoading, token } = useAuth();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const router = useRouter();
 
   const load = async () => {
     setLoading(true);
