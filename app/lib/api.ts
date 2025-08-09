@@ -8,8 +8,8 @@ function getDefaultBaseUrl() {
   const env = (Constants?.expoConfig as any)?.extra?.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_API_URL;
   if (env) return env;
   // heuristics for emulator vs device
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3000';
-  return 'http://localhost:3000';
+  if (Platform.OS === 'android') return 'http://10.0.2.2:3001';
+  return 'http://localhost:3001';
 }
 
 export const BASE_URL = getDefaultBaseUrl();
