@@ -39,18 +39,42 @@ async function request(path: string, options: RequestInit = {}) {
     ...(options.headers || {}),
     ...(await getAuthHeader()),
   };
-  const res = await fetch(BASE_URL + path, { ...options, headers });
-  const text = await res.text();
-  let data: any = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  if (!res.ok) {
-    const msg = data?.message || data?.error || res.statusText;
-    const err: any = new Error(msg);
-    err.status = res.status;
-    err.data = data;
-    throw err;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(BASE_URL + path, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+    const text = await res.text();
+    let data: any = null;
+    try { 
+      data = text ? JSON.parse(text) : null;
+    } catch { 
+      data = text;
+    }
+    if (!res.ok) {
+      console.error(`Request failed with status ${res.status}:`, data);
+      const msg = data?.message || data?.error || res.statusText;
+      const err: any = new Error(msg);
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+    return data;
+  } catch (error) {
+    if ((error as any).name === 'AbortError') {
+      console.error(`Request timed out to ${path}`);
+    } else {
+      console.error(`Request error to ${path}:`, error);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return data;
 }
 
 export const api = {
