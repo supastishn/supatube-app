@@ -13,9 +13,11 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+  origin: '*', // Allow all origins
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization']
+  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json({ limit: '2mb' }));
 if (process.env.NODE_ENV !== 'test') {

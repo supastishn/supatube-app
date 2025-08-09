@@ -10,6 +10,8 @@ function getDefaultBaseUrl() {
 
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:3001';
+  } else if (Platform.OS === 'ios') {
+    return 'http://localhost:3001';
   }
 
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
