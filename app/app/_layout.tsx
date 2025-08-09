@@ -13,8 +13,22 @@ function RootNavigator() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       {!token && (
         <>
-          <Stack.Screen name="(auth)/login" options={{ title: 'Login', presentation: 'modal' }} />
-          <Stack.Screen name="(auth)/register" options={{ title: 'Register', presentation: 'modal' }} />
+          <Stack.Screen 
+            name="(auth)/login" 
+            options={{ 
+              title: 'Login', 
+              presentation: 'modal',
+              headerShown: false 
+            }} 
+          />
+          <Stack.Screen 
+            name="(auth)/register" 
+            options={{ 
+              title: 'Register', 
+              presentation: 'modal',
+              headerShown: false 
+            }} 
+          />
         </>
       )}
       <Stack.Screen name="video/[id]" options={{ title: 'Video' }} />
