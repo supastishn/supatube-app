@@ -6,7 +6,11 @@
     "backend"
   ],
   "scripts": {
+    "start": "concurrently \"npm start --prefix app\" \"npm start --prefix backend\"",
     "server": "npm start --prefix backend",
     "test": "npm test --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
