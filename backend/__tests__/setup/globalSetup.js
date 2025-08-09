@@ -6,34 +6,39 @@ const { Client } = require('pg');
 let serverProcess;
 
 async function initDb() {
-  const dbConfig = {
-    user: process.env.TEST_DB_USER || process.env.DB_USER || 'postgres',
-    host: process.env.TEST_DB_HOST || process.env.DB_HOST || 'localhost',
-    database: process.env.TEST_DB_DATABASE || 'yt_clone_test',
-    password: process.env.TEST_DB_PASSWORD || process.env.DB_PASSWORD || '',
-    port: +(process.env.TEST_DB_PORT || process.env.DB_PORT || 5432),
-  };
+  try {
+    const dbConfig = {
+      user: process.env.TEST_DB_USER || process.env.DB_USER || 'postgres',
+      host: process.env.TEST_DB_HOST || process.env.DB_HOST || 'localhost',
+      database: process.env.TEST_DB_DATABASE || 'yt_clone_test',
+      password: process.env.TEST_DB_PASSWORD || process.env.DB_PASSWORD || '',
+      port: +(process.env.TEST_DB_PORT || process.env.DB_PORT || 5432),
+    };
 
-  const client = new Client({ ...dbConfig, database: 'postgres' });
-  await client.connect();
-  // Create test db if not exists
-  const dbName = dbConfig.database;
-  const existsRes = await client.query("SELECT 1 FROM pg_database WHERE datname = $1", [dbName]);
-  if (existsRes.rowCount === 0) {
-    await client.query(`CREATE DATABASE ${dbName}`);
+    const client = new Client({ ...dbConfig, database: 'postgres' });
+    await client.connect();
+    // Create test db if not exists
+    const dbName = dbConfig.database;
+    const existsRes = await client.query("SELECT 1 FROM pg_database WHERE datname = $1", [dbName]);
+    if (existsRes.rowCount === 0) {
+      await client.query(`CREATE DATABASE ${dbName}`);
+    }
+    await client.end();
+
+    // Apply schema
+    const schemaClient = new Client(dbConfig);
+    await schemaClient.connect();
+    const sqlPath = path.join(__dirname, '..', '..', 'database.sql');
+    const schema = fs.readFileSync(sqlPath, 'utf8');
+    await schemaClient.query('BEGIN');
+    await schemaClient.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
+    await schemaClient.query(schema);
+    await schemaClient.query('COMMIT');
+    await schemaClient.end();
+  } catch (err) {
+    console.error('Error in initDb:', err);
+    throw err;
   }
-  await client.end();
-
-  // Apply schema
-  const schemaClient = new Client(dbConfig);
-  await schemaClient.connect();
-  const sqlPath = path.join(__dirname, '..', '..', 'database.sql');
-  const schema = fs.readFileSync(sqlPath, 'utf8');
-  await schemaClient.query('BEGIN');
-  await schemaClient.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
-  await schemaClient.query(schema);
-  await schemaClient.query('COMMIT');
-  await schemaClient.end();
 }
 
 module.exports = async () => {
@@ -71,7 +76,7 @@ module.exports = async () => {
     };
     const onErr = (data) => {
       // Allow logs but not crash
-      // console.error('server err:', data.toString());
+      console.error('server err:', data.toString());
     };
     const cleanup = () => {
       serverProcess.stdout.off('data', onData);
@@ -79,10 +84,16 @@ module.exports = async () => {
     };
     serverProcess.stdout.on('data', onData);
     serverProcess.stderr.on('data', onErr);
-    serverProcess.on('error', reject);
+    serverProcess.on('error', (err) => {
+      console.error('Failed to start server process:', err);
+      reject(err);
+    });
     // Fallback timeout
     setTimeout(() => {
-      if (!ready) resolve();
+      if (!ready) {
+        cleanup();
+        reject(new Error('globalSetup: Server start timed out.'));
+      }
     }, 5000);
   });
 
