@@ -8,16 +8,15 @@ import { Stack } from 'expo-router';
 function RootNavigator() {
   const { token, loading } = useAuth();
   if (loading) return null;
-  if (!token) {
-    return (
-      <Stack>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack>
-    );
-  }
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      {!token && (
+        <>
+          <Stack.Screen name="(auth)/login" options={{ title: 'Login', presentation: 'modal' }} />
+          <Stack.Screen name="(auth)/register" options={{ title: 'Register', presentation: 'modal' }} />
+        </>
+      )}
       <Stack.Screen name="video/[id]" options={{ title: 'Video' }} />
       <Stack.Screen name="+not-found" />
     </Stack>

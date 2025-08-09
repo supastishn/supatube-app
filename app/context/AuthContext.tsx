@@ -14,6 +14,7 @@ export type AuthContextType = AuthState & {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  skipAuth: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,6 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setState((s) => ({ ...s, loading: false }));
       }
     })();
+  }, []);
+
+  const skipAuth = useCallback(() => {
+    setState({ token: null, user: null, loading: false });
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -70,7 +75,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState({ token: null, user: null, loading: false });
   }, []);
 
-  const value = useMemo(() => ({ ...state, signIn, signUp, signOut }), [state, signIn, signUp, signOut]);
+  const value = useMemo(
+    () => ({ ...state, signIn, signUp, signOut, skipAuth }), 
+    [state, signIn, signUp, signOut, skipAuth]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
