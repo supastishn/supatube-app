@@ -10,6 +10,8 @@ const sqlPath = path.join(__dirname, '..', '..', 'database.sql');
 let schema = fs.readFileSync(sqlPath, 'utf8');
 // pg-mem doesn't support triggers for full-text search. Remove them for tests.
 schema = schema.replace(/-- index for full-text search[\s\S]+?EXECUTE FUNCTION videos_tsv_update\(\);/, '');
+// pg-mem also doesn't support the tsvector type.
+schema = schema.replace(/,\s*search_vector tsvector/, '');
 mockDb.public.none(schema);
 
 // Create a backup of the initial state, so we can restore it before each test
