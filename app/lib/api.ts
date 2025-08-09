@@ -48,14 +48,10 @@ async function request(path: string, options: RequestInit = {}) {
     ...(await getAuthHeader()),
   };
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
-
   try {
     const res = await fetch(BASE_URL + path, {
       ...options,
       headers,
-      signal: controller.signal,
     });
     const text = await res.text();
     let data: any = null;
@@ -74,14 +70,8 @@ async function request(path: string, options: RequestInit = {}) {
     }
     return data;
   } catch (error) {
-    if ((error as any).name === 'AbortError') {
-      console.error(`Request timed out to ${path}`);
-    } else {
-      console.error(`Request error to ${path}:`, error);
-    }
+    console.error(`Request error to ${path}:`, error);
     throw error;
-  } finally {
-    clearTimeout(timeoutId);
   }
 }
 
