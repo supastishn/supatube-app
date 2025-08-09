@@ -17,8 +17,7 @@ let schema = fs.readFileSync(sqlPath, 'utf8');
 schema = schema.replace(/-- index for full-text search[\s\S]+?EXECUTE FUNCTION videos_tsv_update\(\);/, '');
 // pg-mem also doesn't support the tsvector type.
 schema = schema.replace(/,\s*search_vector tsvector/, '');
-// pg-mem has issues with ON DELETE CASCADE constraints.
-schema = schema.replace(/ ON DELETE CASCADE/g, '');
+// pg-mem may have issues with ON DELETE CASCADE, but it's required for tests to pass.
 mockDb.public.none(schema);
 
 // Create a backup of the initial state, so we can restore it before each test

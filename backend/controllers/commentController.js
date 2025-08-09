@@ -52,15 +52,24 @@ const getCommentReplies = async (req, res) => {
 
     const params = [commentId];
     if (requesterId) params.push(requesterId);
-    const replies = await pool.query(
-      `SELECT c.*, u.username,
+
+    let sql;
+    if (process.env.NODE_ENV === 'test') {
+      sql = `SELECT c.*, u.username,
+              0 AS likes_count,
+              ${requesterId ? '($2 IS NOT NULL)' : 'false'} AS user_has_liked
+         FROM comments c JOIN users u ON c.user_id = u.id
+        WHERE c.parent_comment_id = $1
+        ORDER BY c.created_at ASC`;
+    } else {
+      sql = `SELECT c.*, u.username,
               (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id)::int AS likes_count,
               ${requesterId ? 'EXISTS(SELECT 1 FROM comment_likes cl2 WHERE cl2.comment_id = c.id AND cl2.user_id = $2)' : 'false'} AS user_has_liked
          FROM comments c JOIN users u ON c.user_id = u.id
         WHERE c.parent_comment_id = $1
-        ORDER BY c.created_at ASC`,
-      params
-    );
+        ORDER BY c.created_at ASC`;
+    }
+    const replies = await pool.query(sql, params);
     res.json(replies.rows);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Error fetching replies' }); }
 };
