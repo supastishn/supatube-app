@@ -7,8 +7,18 @@ const TOKEN_KEY = 'auth_token';
 function getDefaultBaseUrl() {
   const env = (Constants?.expoConfig as any)?.extra?.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_API_URL;
   if (env) return env;
-  // heuristics for emulator vs device
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3001';
+
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:3001';
+  }
+
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    // pick up whatever host the web app is served from, but hit port 3001
+    const { protocol, hostname } = window.location;
+    return `${protocol}//${hostname}:3001`;
+  }
+
+  // fallback for iOS simulator
   return 'http://localhost:3001';
 }
 
