@@ -9,15 +9,17 @@ const apiRoutes = require('./routes');
 const app = express();
 
 // --- Middleware ---
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-}));
+// Enable CORS first, so it's applied before other middleware like helmet
+// that might interfere with response headers.
 app.use(cors({
   origin: '*', // Allow all origins
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
   preflightContinue: false,
   optionsSuccessStatus: 204
+}));
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
 }));
 app.use(express.json({ limit: '2mb' }));
 if (process.env.NODE_ENV !== 'test') {

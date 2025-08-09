@@ -9,8 +9,14 @@ function getDefaultBaseUrl() {
   if (env) return env;
 
   if (Platform.OS === 'android') {
+    // 10.0.2.2 is the special IP for the Android emulator to connect to the host machine's localhost.
+    // If you are running the app on a physical Android device, you need to replace this
+    // with your computer's IP address on the local network.
+    // You can also set the EXPO_PUBLIC_API_URL environment variable to override this.
     return 'http://10.0.2.2:3001';
   } else if (Platform.OS === 'ios') {
+    // For iOS simulator, localhost works directly. For physical iOS devices, same as Android,
+    // you'll need to use your computer's local network IP.
     return 'http://localhost:3001';
   }
 
