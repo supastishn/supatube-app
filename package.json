@@ -1,0 +1,12 @@
+{
+  "name": "youtube-clone-monorepo",
+  "private": true,
+  "workspaces": [
+    "app",
+    "backend"
+  ],
+  "scripts": {
+    "server": "npm start --prefix backend",
+    "test": "npm test --prefix backend"
+  }
+}
