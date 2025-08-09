@@ -9,7 +9,13 @@ import { Redirect, Stack } from 'expo-router';
 function RootNavigator() {
   const { token, loading } = useAuth();
   if (loading) return null;
-  if (!token) return <Redirect href="/(auth)/login" />;
+  if (!token) {
+    return (
+      <Stack>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack>
+    );
+  }
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
