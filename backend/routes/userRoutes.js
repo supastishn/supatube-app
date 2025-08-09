@@ -1,6 +1,13 @@
 const express = require('express');
-const { registerUser, loginUser, getUserProfile } = require('../controllers/userController');
+const {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  updateUserProfile,
+  uploadAvatar
+} = require('../controllers/userController');
 const { authenticateToken } = require('../middleware/authMiddleware');
+const upload = require('../config/multer');
 
 const router = express.Router();
 
