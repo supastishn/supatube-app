@@ -20,7 +20,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single-page-app",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
