@@ -11,6 +11,10 @@ const config = getDefaultConfig(projectRoot);
 config.resolver.blockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
+  // It's a good practice to explicitly ignore node_modules folder.
+  // This will prevent "too many files watched" errors.
+  new RegExp(`${projectRoot}/node_modules/.*`),
+  new RegExp(`${workspaceRoot}/node_modules/.*`),
 ];
 
 module.exports = config;
