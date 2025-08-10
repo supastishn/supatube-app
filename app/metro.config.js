@@ -2,18 +2,24 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
-// Get default config for this app directory
-const config = getDefaultConfig(__dirname);
+// Find the project and workspace directories
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, '..');
 
-const projectRoot = path.resolve(__dirname, '..');
+const config = getDefaultConfig(projectRoot);
 
-// To prevent ENOSPC errors (too many files watched), we can tell Metro
-// to not watch certain directories.
+// Watch all files in the monorepo
+config.watchFolders = [workspaceRoot];
+// Let Metro know where to resolve packages and in what order
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(workspaceRoot, 'node_modules'),
+];
+
+// Block files that metro should not watch
 config.resolver.blockList = [
-  // Ignore the root node_modules directory.
-  new RegExp(`${projectRoot}/node_modules/.*`),
-  // Ignore the backend directory.
-  new RegExp(`${projectRoot}/backend/.*`),
+  new RegExp(`${workspaceRoot}/backend/.*`),
+  new RegExp(`${workspaceRoot}/.git/.*`),
 ];
 
 module.exports = config;
