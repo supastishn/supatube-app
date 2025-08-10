@@ -43,9 +43,12 @@ export default function UploadScreen() {
     formData.append('description', description.trim());
     formData.append('visibility', visibility);
 
+    // Platform-specific file handling for FormData
     if (Platform.OS === 'web' && video.file) {
+      // On web, use the File object directly
       formData.append('video', video.file);
     } else {
+      // On mobile, use the RN-specific URI-based object
       formData.append('video', {
         uri: video.uri,
         name: video.name,
@@ -55,8 +58,10 @@ export default function UploadScreen() {
     
     if (thumbnail) {
       if (Platform.OS === 'web' && thumbnail.file) {
+        // On web, use the File object directly
         formData.append('thumbnail', thumbnail.file);
       } else {
+        // On mobile, use the RN-specific URI-based object
         formData.append('thumbnail', {
           uri: thumbnail.uri,
           name: thumbnail.name,

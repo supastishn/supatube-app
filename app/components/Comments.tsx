@@ -5,9 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 
 export type Comment = {
   id: string;
-  author: { id: string; name: string };
-  text: string;
-  createdAt: string;
+  username: string;
+  comment: string;
+  created_at: string;
 };
 
 export default function Comments({ videoId }: { videoId: string }) {
@@ -38,7 +38,7 @@ export default function Comments({ videoId }: { videoId: string }) {
     if (!text.trim()) return;
     setPosting(true);
     try {
-      const created = await api.post(`/api/videos/${videoId}/comments`, { text });
+      const created = await api.post(`/api/videos/${videoId}/comments`, { comment: text });
       setText('');
       // optimistic reload
       await load();
@@ -59,8 +59,8 @@ export default function Comments({ videoId }: { videoId: string }) {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.comment}>
-            <Text style={styles.author}>{item.author?.name || 'User'}</Text>
-            <Text>{item.text}</Text>
+            <Text style={styles.author}>{item.username || 'User'}</Text>
+            <Text>{item.comment}</Text>
           </View>
         )}
         ListEmptyComponent={<Text style={{ color: '#666' }}>No comments yet.</Text>}
