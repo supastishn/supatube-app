@@ -1,11 +1,11 @@
 import React, { useMemo, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
-import * as Video from 'expo-video';
+import { Video } from 'expo-video';
 import { videoStreamUrl } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 export default function VideoPlayer({ id }: { id: string }) {
-  const ref = useRef<Video.Video>(null);
+  const ref = useRef<Video>(null);
   const { token } = useAuth();
   const source = useMemo(() => ({
     uri: videoStreamUrl(id),
@@ -14,7 +14,7 @@ export default function VideoPlayer({ id }: { id: string }) {
 
   return (
     <View style={styles.container}>
-      <Video.Video
+      <Video
         ref={ref}
         style={styles.video}
         source={source as any}
