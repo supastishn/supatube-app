@@ -8,6 +8,9 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
+// Disable Watchman
+config.watchman = false;
+
 // Watch all files in the monorepo
 config.watchFolders = [workspaceRoot];
 // Let Metro know where to resolve packages and in what order
