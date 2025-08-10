@@ -13,6 +13,7 @@ config.resolver.blockList = [
   /node_modules\/.*\/__tests__\/.*/,
   /node_modules\/.*\/android\/.*/,
   /node_modules\/.*\/ios\/.*/,
+  /node_modules\/.*\/build\/.*/,
   /node_modules\/.*\/\\.git\/.*/,
   /node_modules\/.*\/\\.github\/.*/,
   /node_modules\/.*\/\\.vscode\/.*/,
