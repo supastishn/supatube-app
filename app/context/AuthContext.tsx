@@ -56,19 +56,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = useCallback(async (name: string, email: string, password: string) => {
     try {
       const res = await api.post('/api/users/register', { username: email, name, password });
-      const token = res.token ?? res.data?.token ?? res?.accessToken ?? res?.jwt;
-      if (token) {
-        await SecureStore.setItemAsync(TOKEN_KEY, token);
-        setState({ token, user: res.user ?? res.data?.user ?? { name, email }, loading: false });
-      } else {
-        // if backend does not auto-login, then call login
-        await signIn(email, password);
+      if (!res.token || !res.user) {
+        throw new Error('Registration did not return the expected token and user data.');
       }
+      await SecureStore.setItemAsync(TOKEN_KEY, res.token);
+      setState({ token: res.token, user: res.user, loading: false });
     } catch (e: any) {
       Alert.alert('Registration failed', e?.message || 'Please try again');
       throw e;
     }
-  }, [signIn]);
+  }, []);
 
   const signOut = useCallback(async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
