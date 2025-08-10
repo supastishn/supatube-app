@@ -29,9 +29,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const token = await SecureStore.getItemAsync(TOKEN_KEY);
-        setState((s) => ({ ...s, token: token ?? null, loading: false }));
+        if (token) {
+          const user = await api.get('/api/users/me');
+          setState({ token, user, loading: false });
+        } else {
+          setState({ token: null, user: null, loading: false });
+        }
       } catch (e) {
-        setState((s) => ({ ...s, loading: false }));
+        // If token is invalid, api.get will throw. Treat as logged out.
+        await SecureStore.deleteItemAsync(TOKEN_KEY);
+        setState({ token: null, user: null, loading: false });
       }
     })();
   }, []);
