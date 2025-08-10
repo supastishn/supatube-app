@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { api } from '@/lib/api';
@@ -41,17 +42,27 @@ export default function UploadScreen() {
     formData.append('title', title.trim());
     formData.append('description', description.trim());
     formData.append('visibility', visibility);
-    formData.append('video', {
-      uri: video.uri,
-      name: video.name,
-      type: video.mimeType,
-    } as any);
-    if (thumbnail) {
-      formData.append('thumbnail', {
-        uri: thumbnail.uri,
-        name: thumbnail.name,
-        type: thumbnail.mimeType,
+
+    if (Platform.OS === 'web' && video.file) {
+      formData.append('video', video.file);
+    } else {
+      formData.append('video', {
+        uri: video.uri,
+        name: video.name,
+        type: video.mimeType,
       } as any);
+    }
+    
+    if (thumbnail) {
+      if (Platform.OS === 'web' && thumbnail.file) {
+        formData.append('thumbnail', thumbnail.file);
+      } else {
+        formData.append('thumbnail', {
+          uri: thumbnail.uri,
+          name: thumbnail.name,
+          type: thumbnail.mimeType,
+        } as any);
+      }
     }
 
     try {
