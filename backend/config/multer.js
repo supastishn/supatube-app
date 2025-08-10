@@ -21,16 +21,7 @@ const storage = multer.diskStorage({
 });
 
 const allowedVideo = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
-const allowedAvatar = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-
-const fileFilter = (req, file, cb) => {
-  if (file.fieldname === 'avatar') {
-    if (!allowedAvatar.includes(file.mimetype)) {
-      return cb(new Error('Unsupported image format'));
-    }
-  }
-  cb(null, true);
-};
+const allowedImage = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 const upload = multer({
   storage,
@@ -43,13 +34,13 @@ const upload = multer({
         return cb(new Error('Unsupported video format'));
       }
     }
-    if (file.fieldname === 'thumbnail') {
+    if (file.fieldname === 'thumbnail' || file.fieldname === 'avatar') {
       if (!allowedImage.includes(file.mimetype)) {
         return cb(new Error('Unsupported image format'));
       }
     }
     cb(null, true);
-  }
+  },
 });
 
 module.exports = upload;

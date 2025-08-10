@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { Stack } from 'expo-router';
@@ -50,6 +51,20 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      // @ts-ignore
+      if (window.eruda) return;
+      const script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/eruda';
+      document.body.appendChild(script);
+      script.onload = () => {
+        // @ts-ignore
+        eruda.init();
+      };
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <StatusBar style="auto" />
