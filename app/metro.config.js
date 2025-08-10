@@ -23,10 +23,13 @@ config.resolver.nodeModulesPaths = [
 config.resolver.blockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
-  // This is a very restrictive blockList. It blocks all of node_modules except the
-  // expo-router entry point. This may cause issues if your app has other dependencies.
-  new RegExp(`${workspaceRoot}/node_modules/.*`),
-  new RegExp(`${projectRoot}/node_modules/.*(?<!/expo-router/entry)`),
+  // The following regex is restrictive. It attempts to block all node_modules
+  // except for 'expo-router'. This can cause "Unable to resolve module" errors
+  // for other packages that your app or expo-router depends on.
+  // The standard monorepo setup is to not block node_modules directories but
+  // instead point to them in `watchFolders` and `nodeModulesPaths`.
+  new RegExp(`${workspaceRoot}/node_modules/(?!expo-router/).*`),
+  new RegExp(`${projectRoot}/node_modules/(?!expo-router/).*`),
 ];
 
 module.exports = config;
