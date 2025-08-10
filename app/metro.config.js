@@ -20,6 +20,10 @@ config.resolver.nodeModulesPaths = [
 config.resolver.blockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
+  // Prevent Metro from watching files in node_modules. This will improve performance
+  // and prevent "too many files watched" errors.
+  new RegExp(`${workspaceRoot}/node_modules/.*`),
+  new RegExp(`${projectRoot}/node_modules/.*`),
 ];
 
 module.exports = config;
