@@ -2,19 +2,24 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
+// Find the project and workspace directories
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// The backend is in a sibling directory. We don't want Metro to watch it.
+// Watch all files in the monorepo
+config.watchFolders = [workspaceRoot];
+// Let Metro know where to resolve packages and in what order
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(workspaceRoot, 'node_modules'),
+];
+
+// Block files that metro should not watch
 config.resolver.blockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
-  // It's a good practice to explicitly ignore node_modules folder.
-  // This will prevent "too many files watched" errors.
-  new RegExp(`${projectRoot}/node_modules/.*`),
-  new RegExp(`${workspaceRoot}/node_modules/.*`),
 ];
 
 module.exports = config;
