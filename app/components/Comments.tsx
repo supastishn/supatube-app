@@ -10,7 +10,7 @@ export type Comment = {
   created_at: string;
 };
 
-export default function Comments({ videoId }: { videoId: string }) {
+export default function Comments({ videoId }: { videoId:string }) {
   const { token } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
