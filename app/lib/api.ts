@@ -41,6 +41,40 @@ async function getAuthHeader() {
   }
 }
 
+async function multipartRequest(path: string, formData: FormData) {
+  const headers: HeadersInit = {
+    // 'Content-Type': 'multipart/form-data' is set automatically by fetch with FormData
+    ...(await getAuthHeader()),
+  };
+
+  try {
+    const res = await fetch(BASE_URL + path, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    const text = await res.text();
+    let data: any = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = text;
+    }
+    if (!res.ok) {
+      console.error(`Request failed with status ${res.status}:`, data);
+      const msg = data?.message || data?.error || res.statusText;
+      const err: any = new Error(msg);
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+    return data;
+  } catch (error) {
+    console.error(`Request error to ${path}:`, error);
+    throw error;
+  }
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -78,6 +112,7 @@ async function request(path: string, options: RequestInit = {}) {
 export const api = {
   get: (p: string) => request(p),
   post: (p: string, body?: any) => request(p, { method: 'POST', body: JSON.stringify(body ?? {}) }),
+  postForm: (p: string, formData: FormData) => multipartRequest(p, formData),
   put: (p: string, body?: any) => request(p, { method: 'PUT', body: JSON.stringify(body ?? {}) }),
   patch: (p: string, body?: any) => request(p, { method: 'PATCH', body: JSON.stringify(body ?? {}) }),
   delete: (p: string) => request(p, { method: 'DELETE' }),

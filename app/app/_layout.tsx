@@ -13,25 +13,37 @@ function RootNavigator() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       {!token && (
         <>
-          <Stack.Screen 
-            name="(auth)/login" 
-            options={{ 
-              title: 'Login', 
+          <Stack.Screen
+            name="(auth)/login"
+            options={{
+              title: 'Login',
               presentation: 'modal',
-              headerShown: false 
-            }} 
+              headerShown: false,
+            }}
           />
-          <Stack.Screen 
-            name="(auth)/register" 
-            options={{ 
-              title: 'Register', 
+          <Stack.Screen
+            name="(auth)/register"
+            options={{
+              title: 'Register',
               presentation: 'modal',
-              headerShown: false 
-            }} 
+              headerShown: false,
+            }}
           />
         </>
       )}
-      <Stack.Screen name="video/[id]" options={{ title: 'Video' }} />
+      <Stack.Screen name="video/[id]" options={{ title: 'Video', headerShown: false }} />
+      <Stack.Screen name="upload" options={{ title: 'Upload Video', presentation: 'modal' }} />
+      <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      <Stack.Screen name="history" options={{ title: 'Watch History' }} />
+      <Stack.Screen name="studio/index" options={{ title: 'Creator Studio' }} />
+      <Stack.Screen name="studio/analytics" options={{ title: 'Channel Analytics' }} />
+      <Stack.Screen name="studio/edit/[id]" options={{ title: 'Edit Video' }} />
+      <Stack.Screen name="playlists/index" options={{ title: 'My Playlists' }} />
+      <Stack.Screen
+        name="playlists/create"
+        options={{ title: 'New Playlist', presentation: 'modal' }}
+      />
+      <Stack.Screen name="playlists/[id]" options={{ title: 'Playlist' }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

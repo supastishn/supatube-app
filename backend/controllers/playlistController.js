@@ -125,4 +125,23 @@ const getPlaylist = async (req, res) => {
   }
 };
 
-module.exports = { createPlaylist, updatePlaylist, deletePlaylist, addVideoToPlaylist, removeVideoFromPlaylist, getPlaylist };
+const getUserPlaylists = async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    const result = await pool.query(
+      `SELECT p.*, COUNT(pv.video_id)::int AS video_count
+       FROM playlists p
+       LEFT JOIN playlist_videos pv ON p.id = pv.playlist_id
+       WHERE p.user_id = $1
+       GROUP BY p.id
+       ORDER BY p.updated_at DESC`,
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error fetching user playlists' });
+  }
+};
+
+module.exports = { createPlaylist, updatePlaylist, deletePlaylist, addVideoToPlaylist, removeVideoFromPlaylist, getPlaylist, getUserPlaylists };

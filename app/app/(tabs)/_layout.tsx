@@ -7,43 +7,65 @@ import ProfilePopover from '@/components/ProfilePopover';
 
 export default function TabLayout() {
   const [showPopover, setShowPopover] = useState(false);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const router = useRouter();
 
   return (
     <>
-      <Tabs screenOptions={{ 
-        headerRight: () => (
-          <TouchableOpacity 
-            style={styles.profileBtn} 
-            onPress={() => setShowPopover(true)}
-          >
-            <FontAwesome name="user-circle" size={24} color={token ? '#ff0000' : '#888'} />
-          </TouchableOpacity>
-        ),
-      }}>
-        <Tabs.Screen name="index" options={{ 
-          title: 'Home',
-          tabBarIcon: ({ focused }) => (
-            <FontAwesome name="home" size={24} color={focused ? '#ff0000' : '#888'} />
+      <Tabs
+        screenOptions={({ route }) => ({
+          tabBarActiveTintColor: '#ff0000',
+          tabBarInactiveTintColor: '#888',
+          headerRight: () => (
+            <View style={styles.headerRight}>
+              {route.name === 'index' && (
+                <TouchableOpacity
+                  style={styles.headerBtn}
+                  onPress={() => router.push('/(tabs)/search')}>
+                  <FontAwesome name="search" size={20} color={'#333'} />
+                </TouchableOpacity>
+              )}
+              {!!token && (
+                <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/upload')}>
+                  <FontAwesome name="upload" size={20} color={'#333'} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.profileBtn} onPress={() => setShowPopover(true)}>
+                <FontAwesome name="user-circle" size={24} color={token ? '#ff0000' : '#888'} />
+              </TouchableOpacity>
+            </View>
           ),
-        }} />
-        <Tabs.Screen name="explore" options={{ 
-          title: 'Explore',
-          tabBarIcon: ({ focused }) => (
-            <FontAwesome name="compass" size={24} color={focused ? '#ff0000' : '#888'} />
-          ),
-        }} />
-        <Tabs.Screen name="search" options={{ 
-          title: 'Search',
-          tabBarIcon: ({ focused }) => (
-            <FontAwesome name="search" size={24} color={focused ? '#ff0000' : '#888'} />
-          ),
-        }} />
+        })}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color, size }) => <FontAwesome name="home" size={size} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="subscriptions"
+          options={{
+            title: 'Subscriptions',
+            tabBarIcon: ({ color, size }) => (
+              <FontAwesome name="youtube-play" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="library"
+          options={{
+            title: 'Library',
+            tabBarIcon: ({ color, size }) => <FontAwesome name="folder" size={size} color={color} />,
+          }}
+        />
+        {/* Hidden tabs, navigated to programmatically */}
+        <Tabs.Screen name="explore" options={{ href: null }} />
+        <Tabs.Screen name="search" options={{ href: null }} />
       </Tabs>
-      
-      <ProfilePopover 
-        visible={showPopover} 
+
+      <ProfilePopover
+        visible={showPopover}
         onClose={() => setShowPopover(false)}
         onLogin={() => {
           setShowPopover(false);
@@ -53,7 +75,16 @@ export default function TabLayout() {
           setShowPopover(false);
           router.push('/(auth)/register');
         }}
+        onStudio={() => {
+          setShowPopover(false);
+          router.push('/studio');
+        }}
+        onSettings={() => {
+          setShowPopover(false);
+          router.push('/settings');
+        }}
         loggedIn={!!token}
+        user={user}
         onLogout={() => {
           setShowPopover(false);
           router.replace('/(tabs)/');
@@ -64,8 +95,17 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  profileBtn: {
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginRight: 16,
+    gap: 16,
+  },
+  headerBtn: {
     padding: 8,
+  },
+  profileBtn: {
+    // marginRight: 16,
+    // padding: 8,
   },
 });
