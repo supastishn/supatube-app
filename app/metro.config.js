@@ -23,6 +23,10 @@ config.resolver.nodeModulesPaths = [
 config.resolver.blockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
+  // This is a very restrictive blockList. It blocks all of node_modules except the
+  // expo-router entry point. This may cause issues if your app has other dependencies.
+  new RegExp(`${workspaceRoot}/node_modules/.*`),
+  new RegExp(`${projectRoot}/node_modules/.*(?<!/expo-router/entry)`),
 ];
 
 module.exports = config;
