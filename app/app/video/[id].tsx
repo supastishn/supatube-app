@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -95,8 +96,12 @@ export default function VideoDetailScreen() {
         <View style={styles.metaContainer}>
           <Text style={styles.title}>{video.title}</Text>
           <View style={styles.channelRow}>
-            <View style={styles.avatar} />
-            <Text style={styles.channel}>{video.channel || 'Unknown Channel'}</Text>
+            {video.channel?.avatar_url ? (
+              <Image source={{ uri: video.channel.avatar_url }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatar} />
+            )}
+            <Text style={styles.channel}>{video.channel?.name || 'Unknown Channel'}</Text>
             <TouchableOpacity
               style={[styles.subBtn, video.user_has_subscribed && styles.subBtnActive]}
               onPress={toggleSubscription}

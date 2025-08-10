@@ -57,7 +57,7 @@ const listSubscriptionsFeed = async (req, res) => {
   const userId = req.user.userId;
   try {
     const result = await pool.query(
-      `SELECT v.*, u.username as channel
+      `SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel
        FROM videos v
        JOIN subscriptions s ON v.user_id = s.channel_id
        JOIN users u ON u.id = v.user_id

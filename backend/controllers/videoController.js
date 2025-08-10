@@ -67,13 +67,13 @@ const getAllVideos = async (req, res) => {
     let query;
     if (process.env.NODE_ENV === 'test') {
       query = `
-        SELECT v.*, u.username as channel, 0 as likes_count
+        SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel, 0 as likes_count
         FROM videos v
         JOIN users u ON v.user_id = u.id
       `;
     } else {
       query = `
-        SELECT v.*, u.username as channel,
+        SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel,
         (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count
         FROM videos v
         JOIN users u ON v.user_id = u.id
@@ -134,7 +134,7 @@ const getVideoById = async (req, res) => {
             let videoQuery;
             if (process.env.NODE_ENV === 'test') {
               videoQuery = `
-                SELECT v.*, u.username as channel,
+                SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel,
                 0 as likes_count,
                 ${userId ? '($2 IS NOT NULL)' : 'false'} as user_has_liked,
                 false as user_has_subscribed
@@ -144,7 +144,7 @@ const getVideoById = async (req, res) => {
               `;
             } else {
               videoQuery = `
-                SELECT v.*, u.username as channel,
+                SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel,
                 (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count,
                 ${userId ? 'EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $2)' : 'false'} as user_has_liked,
                 ${userId ? 'EXISTS(SELECT 1 FROM subscriptions WHERE channel_id = v.user_id AND subscriber_id = $2)' : 'false'} as user_has_subscribed
