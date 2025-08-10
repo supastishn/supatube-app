@@ -19,6 +19,7 @@ export default function UploadScreen() {
   const [description, setDescription] = useState('');
   const [video, setVideo] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [thumbnail, setThumbnail] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [visibility, setVisibility] = useState('public');
   const [loading, setLoading] = useState(false);
 
   const pickVideo = async () => {
@@ -39,6 +40,7 @@ export default function UploadScreen() {
     const formData = new FormData();
     formData.append('title', title.trim());
     formData.append('description', description.trim());
+    formData.append('visibility', visibility);
     formData.append('video', {
       uri: video.uri,
       name: video.name,
@@ -56,7 +58,8 @@ export default function UploadScreen() {
       await api.postForm('/api/videos', formData);
       Alert.alert('Success', 'Video uploaded! It will be processed shortly.');
       router.back();
-    } catch (e: any)      Alert.alert('Upload failed', e.message);
+    } catch (e: any) {
+      Alert.alert('Upload failed', e.message);
     } finally {
       setLoading(false);
     }
@@ -84,6 +87,25 @@ export default function UploadScreen() {
         <Text>{thumbnail ? `Thumbnail: ${thumbnail.name}` : 'Select Thumbnail (Optional)'}</Text>
       </TouchableOpacity>
 
+      <Text style={styles.label}>Visibility</Text>
+      <View style={styles.switchContainer}>
+        <TouchableOpacity
+          onPress={() => setVisibility('public')}
+          style={[styles.switchOption, visibility === 'public' && styles.switchOptionActive]}>
+          <Text>Public</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setVisibility('unlisted')}
+          style={[styles.switchOption, visibility === 'unlisted' && styles.switchOptionActive]}>
+          <Text>Unlisted</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setVisibility('private')}
+          style={[styles.switchOption, visibility === 'private' && styles.switchOptionActive]}>
+          <Text>Private</Text>
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity style={styles.submitButton} onPress={submit} disabled={loading}>
         {loading ? (
           <ActivityIndicator color="#fff" />
@@ -107,6 +129,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
+  switchContainer: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  switchOption: { flex: 1, padding: 12, alignItems: 'center', backgroundColor: '#eee' },
+  switchOptionActive: { backgroundColor: '#ccc' },
   submitButton: {
     marginTop: 24,
     padding: 14,

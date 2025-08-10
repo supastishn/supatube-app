@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, TouchableWithoutFeedback, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image, Modal, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 
@@ -42,7 +42,11 @@ export default function ProfilePopover({
       <View style={styles.popover}>
         {loggedIn && user && (
           <View style={styles.userInfo}>
-            <FontAwesome name="user-circle-o" size={40} color="#555" />
+            {user.avatar_url ? (
+              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
+            ) : (
+              <FontAwesome name="user-circle-o" size={40} color="#555" />
+            )}
             <View>
               <Text style={styles.userName}>{user.name}</Text>
               <Text style={styles.userHandle}>@{user.username}</Text>
@@ -112,6 +116,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#eee',
   },
   userName: { fontWeight: 'bold' },
   userHandle: { color: '#666' },

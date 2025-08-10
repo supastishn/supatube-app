@@ -74,7 +74,7 @@ const loginUser = async (req, res) => {
 const getUserProfile = async (req, res) => {
     try {
         // req.user is populated by authenticateToken middleware
-        const userResult = await pool.query('SELECT id, username, created_at FROM users WHERE id = $1', [req.user.userId]);
+        const userResult = await pool.query('SELECT id, username, name, avatar_url, created_at FROM users WHERE id = $1', [req.user.userId]);
         if (userResult.rows.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }

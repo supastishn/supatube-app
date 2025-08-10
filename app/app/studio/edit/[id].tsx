@@ -88,7 +88,32 @@ export default function EditVideoScreen() {
         multiline
       />
       <Text style={styles.label}>Visibility</Text>
-      {/* Visibility picker would go here */}
+      <View style={styles.switchContainer}>
+        <TouchableOpacity
+          onPress={() => setVideo((v: any) => ({ ...v, visibility: 'public' }))}
+          style={[
+            styles.switchOption,
+            video.visibility === 'public' && styles.switchOptionActive,
+          ]}>
+          <Text>Public</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setVideo((v: any) => ({ ...v, visibility: 'unlisted' }))}
+          style={[
+            styles.switchOption,
+            video.visibility === 'unlisted' && styles.switchOptionActive,
+          ]}>
+          <Text>Unlisted</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setVideo((v: any) => ({ ...v, visibility: 'private' }))}
+          style={[
+            styles.switchOption,
+            video.visibility === 'private' && styles.switchOptionActive,
+          ]}>
+          <Text>Private</Text>
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={saveChanges} disabled={saving}>
         {saving ? (
@@ -108,6 +133,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   label: { fontSize: 16, fontWeight: 'bold', marginTop: 12, marginBottom: 8 },
   input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 },
+  switchContainer: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  switchOption: { flex: 1, padding: 12, alignItems: 'center', backgroundColor: '#eee' },
+  switchOptionActive: { backgroundColor: '#ccc' },
   button: {
     marginTop: 24,
     padding: 14,

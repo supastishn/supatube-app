@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
 import { api } from '@/lib/api';
-import VideoPlayer from '@/components/VideoPlayer';
 import Comments from '@/components/Comments';
+import SaveToPlaylistModal from '@/components/SaveToPlaylistModal';
+import VideoCard from '@/components/VideoCard';
+import VideoPlayer from '@/components/VideoPlayer';
 import { useAuth } from '@/context/AuthContext';
 import { FontAwesome } from '@expo/vector-icons';
-import VideoCard from '@/components/VideoCard';
+import { useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function VideoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,6 +27,7 @@ export default function VideoDetailScreen() {
   const [liking, setLiking] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const load = async () => {
     if (!vid) return;
@@ -78,61 +80,69 @@ export default function VideoDetailScreen() {
   };
 
   const openPlaylistSaver = () => {
-    Alert.alert('TODO', 'Implement save to playlist modal');
+    if (!token) return Alert.alert('Login required', 'Please sign in to save videos.');
+    setShowPlaylistModal(true);
   };
 
   if (loading || !vid) return <ActivityIndicator style={{ marginTop: 24 }} />;
   if (!video) return <Text style={{ margin: 16 }}>Video not found</Text>;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <VideoPlayer id={vid} />
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <VideoPlayer id={vid} />
 
-      <View style={styles.metaContainer}>
-        <Text style={styles.title}>{video.title}</Text>
-        <View style={styles.channelRow}>
-          <View style={styles.avatar} />
-          <Text style={styles.channel}>{video.channel || 'Unknown Channel'}</Text>
-          <TouchableOpacity
-            style={[styles.subBtn, video.user_has_subscribed && styles.subBtnActive]}
-            onPress={toggleSubscription}
-            disabled={subscribing}>
-            <Text style={[styles.subText, video.user_has_subscribed && styles.subTextActive]}>
-              {video.user_has_subscribed ? 'Subscribed' : 'Subscribe'}
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.metaContainer}>
+          <Text style={styles.title}>{video.title}</Text>
+          <View style={styles.channelRow}>
+            <View style={styles.avatar} />
+            <Text style={styles.channel}>{video.channel || 'Unknown Channel'}</Text>
+            <TouchableOpacity
+              style={[styles.subBtn, video.user_has_subscribed && styles.subBtnActive]}
+              onPress={toggleSubscription}
+              disabled={subscribing}>
+              <Text style={[styles.subText, video.user_has_subscribed && styles.subTextActive]}>
+                {video.user_has_subscribed ? 'Subscribed' : 'Subscribe'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionsRow}>
+            <TouchableOpacity
+              style={[styles.actionBtn, video.user_has_liked && styles.likeBtnActive]}
+              onPress={toggleLike}
+              disabled={liking}>
+              <FontAwesome
+                name={video.user_has_liked ? 'thumbs-up' : 'thumbs-o-up'}
+                size={20}
+                color={video.user_has_liked ? '#fff' : '#333'}
+              />
+              <Text style={[styles.actionText, video.user_has_liked && styles.likeTextActive]}>
+                {video.likes_count}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionBtn} onPress={openPlaylistSaver}>
+              <FontAwesome name="plus-square-o" size={20} color="#333" />
+              <Text style={styles.actionText}>Save</Text>
+            </TouchableOpacity>
+          </ScrollView>
+          <View style={styles.descBox}>
+            <Text style={styles.desc}>{video.description}</Text>
+          </View>
         </View>
-        <ScrollView horizontal style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[styles.actionBtn, video.user_has_liked && styles.likeBtnActive]}
-            onPress={toggleLike}
-            disabled={liking}>
-            <FontAwesome
-              name={video.user_has_liked ? 'thumbs-up' : 'thumbs-o-up'}
-              size={20}
-              color={video.user_has_liked ? '#fff' : '#333'}
-            />
-            <Text style={[styles.actionText, video.user_has_liked && styles.likeTextActive]}>
-              {video.likes_count}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={openPlaylistSaver}>
-            <FontAwesome name="plus-square-o" size={20} color="#333" />
-            <Text style={styles.actionText}>Save</Text>
-          </TouchableOpacity>
-        </ScrollView>
-        <View style={styles.descBox}>
-          <Text style={styles.desc}>{video.description}</Text>
+        <Comments videoId={vid} />
+        <View style={styles.recSection}>
+          <Text style={styles.recHeader}>Up next</Text>
+          {recommendations.map((v: any) => (
+            <VideoCard key={v.id} video={v} />
+          ))}
         </View>
-      </View>
-      <Comments videoId={vid} />
-      <View style={styles.recSection}>
-        <Text style={styles.recHeader}>Up next</Text>
-        {recommendations.map((v: any) => (
-          <VideoCard key={v.id} video={v} />
-        ))}
-      </View>
-    </ScrollView>
+      </ScrollView>
+      <SaveToPlaylistModal
+        visible={showPlaylistModal}
+        onClose={() => setShowPlaylistModal(false)}
+        videoId={vid}
+      />
+    </View>
   );
 }
 
