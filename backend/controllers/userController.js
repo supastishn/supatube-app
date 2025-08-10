@@ -16,7 +16,16 @@ const registerUser = async (req, res) => {
       'INSERT INTO users (username, password, name) VALUES ($1, $2, $3) RETURNING id, username, name, avatar_url',
       [username, hashedPassword, name]
     );
-    res.status(201).json(result.rows[0]);
+    const user = result.rows[0];
+    
+    // Generate token for the new user
+    const token = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET, {
+      expiresIn: '12h',
+      algorithm: 'HS256',
+    });
+    
+    // Return both token and user
+    res.status(201).json({ token, user });
   } catch (err) {
     console.error(err);
     if (err.code === '23505') { // unique_violation for username
