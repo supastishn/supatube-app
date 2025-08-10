@@ -21,10 +21,10 @@ config.resolver.nodeModulesPaths = [
 ];
 
 // Block files that metro should not watch
-config.resolver.blockList = [
-  ...(config.resolver.blockList || []),
+const defaultBlockList = config.resolver.blockList || [];
+config.resolver.blockList = defaultBlockList.concat([
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
-];
+]);
 
 module.exports = config;
