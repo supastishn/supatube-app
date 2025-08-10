@@ -21,7 +21,8 @@ app.use(cors({
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '1024mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1024mb' }));
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 }
