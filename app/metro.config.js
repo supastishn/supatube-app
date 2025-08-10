@@ -8,16 +8,12 @@ const config = getDefaultConfig(__dirname);
 const projectRoot = path.resolve(__dirname, '..');
 
 // To prevent ENOSPC errors (too many files watched), we can tell Metro
-// to not watch certain directories within node_modules.
+// to not watch certain directories.
 config.resolver.blockList = [
-  /node_modules\/.*\/__tests__\/.*/,
-  /node_modules\/.*\/android\/.*/,
-  /node_modules\/.*\/ios\/.*/,
-  /node_modules\/.*\/build\/.*/,
-  /node_modules\/.*\/\\.git\/.*/,
-  /node_modules\/.*\/\\.github\/.*/,
-  /node_modules\/.*\/\\.vscode\/.*/,
-  new RegExp(`${projectRoot}/node_modules/.*`),
+  // Globally ignore all node_modules directories. This is a broad but effective
+  // way to prevent ENOSPC errors from too many files being watched.
+  /.*\/node_modules\/.*/,
+  // Ignore the backend directory
   new RegExp(`${projectRoot}/backend/.*`),
 ];
 
