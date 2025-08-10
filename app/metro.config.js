@@ -23,6 +23,12 @@ config.resolver.nodeModulesPaths = [
 config.resolver.blockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
+  // To fix "ENOSPC: System limit for number of file watchers reached",
+  // we block node_modules directories from being watched. This will likely
+  // cause "Unable to resolve module" errors, which will need to be addressed
+  // separately.
+  new RegExp(`${projectRoot}/node_modules/.*`),
+  new RegExp(`${workspaceRoot}/node_modules/.*`),
 ];
 
 module.exports = config;
