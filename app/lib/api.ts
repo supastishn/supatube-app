@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync } from 'expo-secure-store';
 
 const TOKEN_KEY = 'auth_token';
 
@@ -34,7 +34,7 @@ export const BASE_URL = getDefaultBaseUrl();
 
 async function getAuthHeader() {
   try {
-    const token = await SecureStore.getItemAsync(TOKEN_KEY);
+    const token = await getItemAsync(TOKEN_KEY);
     return token ? { Authorization: `Bearer ${token}` } : {};
   } catch {
     return {};
