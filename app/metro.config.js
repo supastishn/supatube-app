@@ -8,8 +8,9 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// Disable Watchman
-config.watchman = false;
+// Let Metro use Watchman for file watching, as it is more efficient for
+// large projects and can prevent "too many file watchers" errors.
+// Make sure Watchman is installed on your system.
 
 // Watch all files in the monorepo
 config.watchFolders = [workspaceRoot];
@@ -23,12 +24,6 @@ config.resolver.nodeModulesPaths = [
 config.resolver.blockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
-  // To fix "ENOSPC: System limit for number of file watchers reached",
-  // we block node_modules directories from being watched. This will likely
-  // cause "Unable to resolve module" errors, which will need to be addressed
-  // separately.
-  new RegExp(`${projectRoot}/node_modules/.*`),
-  new RegExp(`${workspaceRoot}/node_modules/.*`),
 ];
 
 module.exports = config;
