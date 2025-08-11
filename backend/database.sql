@@ -34,10 +34,18 @@ CREATE INDEX videos_search_idx ON videos USING GIN (search_vector);
 
 -- trigger function to update search vector
 CREATE OR REPLACE FUNCTION videos_tsv_update() RETURNS trigger AS $$
+DECLARE
+  channel_name text;
+  channel_username text;
 BEGIN
+  -- Fetch channel name and username to include in search vector
+  SELECT name, username INTO channel_name, channel_username FROM users WHERE id = NEW.user_id;
+
   NEW.search_vector :=
     setweight(to_tsvector('english', coalesce(NEW.title,'')), 'A') ||
-    setweight(to_tsvector('english', coalesce(NEW.description,'')), 'B');
+    setweight(to_tsvector('english', coalesce(NEW.description,'')), 'B') ||
+    setweight(to_tsvector('english', coalesce(channel_name,'')), 'C') ||
+    setweight(to_tsvector('english', coalesce(channel_username,'')), 'C');
   RETURN NEW;
 END
 $$ LANGUAGE plpgsql;
