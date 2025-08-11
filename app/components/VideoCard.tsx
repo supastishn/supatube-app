@@ -19,7 +19,7 @@ function formatViews(num: number) {
   return num + ' views';
 }
 
-function timeSince(dateStr?: string) {
+export function timeSince(dateStr?: string) {
   if (!dateStr) return '';
   const date = new Date(dateStr);
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);

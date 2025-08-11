@@ -29,7 +29,7 @@ describe('Comments likes, Subscriptions, Playlists', () => {
 
   test('subscribe toggle and list subscribers', async () => {
     let res = await request.post(`/api/subscriptions/${userA.id}/toggle`).set(authHeader(tokenB));
-    expect([200,201,400]).toContain(res.status);
+    expect([200,201]).toContain(res.status);
     res = await request.get(`/api/subscriptions/${userA.id}/subscribers`);
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);

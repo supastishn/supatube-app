@@ -24,7 +24,7 @@ const resetStreamKey = async (req, res) => {
 const listActiveStreams = async (req, res) => {
   try {
     const q = await pool.query(
-      `SELECT l.*, u.username as channel
+      `SELECT l.*, json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel
          FROM live_streams l JOIN users u ON l.user_id = u.id
         WHERE l.status = 'live'
         ORDER BY l.updated_at DESC`

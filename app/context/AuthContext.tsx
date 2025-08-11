@@ -51,10 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async (email: string, password: string) => {
     try {
       const res = await api.post('/api/users/login', { username: email, password });
-      const token = res.token ?? res.data?.token ?? res?.accessToken ?? res?.jwt;
+      const token = res.token;
       if (!token) throw new Error('No token returned');
       await save(TOKEN_KEY, token);
-      setState({ token, user: res.user ?? res.data?.user ?? null, loading: false });
+      setState({ token, user: res.user, loading: false });
     } catch (e: any) {
       Alert.alert('Login failed', e?.message || 'Please try again');
       throw e;

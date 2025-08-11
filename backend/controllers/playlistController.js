@@ -110,7 +110,7 @@ const getPlaylist = async (req, res) => {
     if (playlist.visibility === 'private' && playlist.user_id !== requesterId) return res.status(403).json({ error: 'Playlist is private' });
 
     const vids = await pool.query(
-      `SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel
+      `SELECT v.*, json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel
        FROM playlist_videos pv
        JOIN videos v ON v.id = pv.video_id
        JOIN users u ON v.user_id = u.id

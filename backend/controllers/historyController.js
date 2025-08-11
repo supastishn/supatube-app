@@ -29,7 +29,7 @@ const getHistory = async (req, res) => {
   const userId = req.user.userId;
   try {
     const result = await pool.query(
-      `SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel, h.watched_at
+      `SELECT v.*, json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel, h.watched_at
        FROM watch_history h
        JOIN videos v ON v.id = h.video_id
        JOIN users u ON u.id = v.user_id

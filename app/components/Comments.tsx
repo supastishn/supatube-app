@@ -1,7 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import CommentItem from './CommentItem';
 import LoginPrompt from './LoginPrompt';
 
 export type Comment = {
@@ -9,15 +19,19 @@ export type Comment = {
   username: string;
   comment: string;
   created_at: string;
+  avatar_url?: string;
+  replies?: Comment[];
 };
 
-export default function Comments({ videoId }: { videoId:string }) {
+export default function Comments({ videoId }: { videoId: string }) {
   const { token } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [text, setText] = useState('');
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const inputRef = useRef<TextInput>(null);
 
   const load = async () => {
     setLoading(true);
@@ -43,8 +57,10 @@ export default function Comments({ videoId }: { videoId:string }) {
     if (!text.trim()) return;
     setPosting(true);
     try {
-      const created = await api.post(`/api/videos/${videoId}/comments`, { comment: text });
+      const payload = { comment: text, parentCommentId: replyTo?.id };
+      await api.post(`/api/videos/${videoId}/comments`, payload);
       setText('');
+      setReplyTo(null);
       // optimistic reload
       await load();
     } catch (e: any) {
@@ -52,6 +68,11 @@ export default function Comments({ videoId }: { videoId:string }) {
     } finally {
       setPosting(false);
     }
+  };
+
+  const handleReply = (comment: Comment) => {
+    setReplyTo(comment);
+    inputRef.current?.focus();
   };
 
   if (loading) return <ActivityIndicator style={{ marginVertical: 16 }} />;
@@ -62,16 +83,20 @@ export default function Comments({ videoId }: { videoId:string }) {
       <FlatList
         data={comments}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.comment}>
-            <Text style={styles.author}>{item.username || 'User'}</Text>
-            <Text>{item.comment}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => <CommentItem comment={item} onReply={handleReply} />}
         ListEmptyComponent={<Text style={{ color: '#666' }}>No comments yet.</Text>}
       />
+      {replyTo && (
+        <View style={styles.replyingToBox}>
+          <Text>Replying to {replyTo.username}</Text>
+          <TouchableOpacity onPress={() => setReplyTo(null)}>
+            <Text style={{ color: 'red' }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={styles.inputRow}>
         <TextInput
+          ref={inputRef}
           placeholder="Add a comment"
           value={text}
           onChangeText={setText}
@@ -88,10 +113,16 @@ export default function Comments({ videoId }: { videoId:string }) {
 
 const styles = StyleSheet.create({
   header: { fontSize: 16, fontWeight: '600', marginVertical: 8 },
-  comment: { paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#eee' },
-  author: { fontWeight: '600', marginBottom: 2 },
   inputRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   input: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, marginRight: 8 },
   send: { backgroundColor: '#ff0000', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
   sendText: { color: '#fff', fontWeight: '600' },
+  replyingToBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#eee',
+    padding: 8,
+    borderRadius: 4,
+    marginTop: 8,
+  },
 });

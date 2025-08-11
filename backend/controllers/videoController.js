@@ -212,6 +212,7 @@ const getCommentsForVideo = async (req, res) => {
         if (process.env.NODE_ENV === 'test') {
           sql = `SELECT c.*, 
                     u.name as username,
+                    u.avatar_url,
                     0 AS likes_count,
                     ${req.user ? '($2 IS NOT NULL)' : 'false'} AS user_has_liked
              FROM comments c JOIN users u ON c.user_id = u.id
@@ -220,6 +221,7 @@ const getCommentsForVideo = async (req, res) => {
         } else {
           sql = `SELECT c.*, 
                     u.name as username,
+                    u.avatar_url,
                     (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id)::int AS likes_count,
                     ${req.user ? `EXISTS(SELECT 1 FROM comment_likes cl2 WHERE cl2.comment_id = c.id AND cl2.user_id = $2)` : 'false'} AS user_has_liked
              FROM comments c JOIN users u ON c.user_id = u.id
@@ -227,7 +229,24 @@ const getCommentsForVideo = async (req, res) => {
              ORDER BY c.created_at ASC`;
         }
         const result = await pool.query(sql, queryParams);
-        res.json(result.rows);
+        
+        // build nested tree
+        const comments = result.rows;
+        const commentMap = {};
+        const nestedComments = [];
+        comments.forEach(c => {
+            c.replies = [];
+            commentMap[c.id] = c;
+        });
+        comments.forEach(c => {
+            if (c.parent_comment_id) {
+                const parent = commentMap[c.parent_comment_id];
+                if (parent) parent.replies.push(c);
+            } else {
+                nestedComments.push(c);
+            }
+        });
+        res.json(nestedComments);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching comments' });
