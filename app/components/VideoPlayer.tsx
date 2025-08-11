@@ -16,14 +16,19 @@ export default function VideoPlayer({ id }: { id: string }) {
   const [source, setSource] = useState<AVPlaybackSource | null>(null);
 
   useEffect(() => {
-    const headers: { [key: string]: string } = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    setSource({
-      uri: videoStreamUrl(id),
-      headers,
-    });
+    // Add a 1-second delay before loading to help visualize loading state.
+    const timer = setTimeout(() => {
+      const headers: { [key: string]: string } = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      setSource({
+        uri: videoStreamUrl(id),
+        headers,
+      });
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [id, token]);
 
   const togglePlayPause = () => {
@@ -107,7 +112,7 @@ export default function VideoPlayer({ id }: { id: string }) {
 
           <Slider
             style={styles.slider}
-            value={status?.positionMillis || 0 / (status?.durationMillis || 1)}
+            value={(status?.positionMillis || 0) / (status?.durationMillis || 1)}
             onValueChange={handleSliderChange}
             minimumValue={0}
             maximumValue={1}
