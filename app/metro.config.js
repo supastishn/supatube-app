@@ -20,18 +20,10 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// Block specific directories from being watched
+// Block everything in node_modules except expo and react-native packages
 config.resolver.blockList = [
-  // .expo cache
   new RegExp(`${projectRoot}/\.expo/.*`),
-  // specific problematic modules
-  new RegExp(`${projectRoot}/node_modules/expo-document-picker/ios/.*`),
-  // large JavaScript directories that shouldn't be watched
-  new RegExp(`${projectRoot}/node_modules\/.*\/node_modules\/.*`),
-  new RegExp(`${projectRoot}/node_modules\/.*\/scaffolded\-.*`),
-  new RegExp(`${projectRoot}/node_modules\/.*\/docgoogle\/.*`),
-  new RegExp(`${projectRoot}/node_modules\/.*\/third\-party\/.*`),
-  new RegExp(`${projectRoot}/node_modules\/.*\/dist\-types\/.*`),
+  new RegExp(`${projectRoot}/node_modules/(?!(expo|@expo|react-native|@react-native)/).*`),
 ];
 
 module.exports = config;
