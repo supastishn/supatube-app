@@ -23,6 +23,7 @@ config.resolver.nodeModulesPaths = [
 // Block files that metro should not watch
 config.resolver.blockList = [
   new RegExp(`${projectRoot}/.expo/.*`),
+  new RegExp(`${projectRoot}/node_modules/expo-document-picker/ios/.*`),
 ];
 
 module.exports = config;
