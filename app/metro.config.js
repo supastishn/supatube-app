@@ -28,10 +28,12 @@ config.resolver.nodeModulesPaths = [
 
 // 3. To further reduce watched files, we block directories that don't need to be watched.
 // The default `blockList` is a single RegExp, so we create an array to add rules.
-// We do NOT block `node_modules` here, as that would prevent module resolution.
+// We block the `node_modules` within the `app` directory to prevent ENOSPC errors,
+// but we do not block the root `node_modules` which is needed for resolving hoisted packages.
 const existingBlockList = config.resolver.blockList;
 const newBlockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
+  new RegExp(`${projectRoot}/node_modules/.*`),
 ];
 if (existingBlockList) {
   newBlockList.push(existingBlockList);
