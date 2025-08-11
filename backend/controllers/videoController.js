@@ -451,60 +451,45 @@ const streamVideo = async (req, res) => {
     const { id } = req.params;
     const requesterId = req.user ? req.user.userId : null;
     try {
-        const result = await pool.query("SELECT id, user_id, video_url, video_480p_url, video_720p_url, video_1080p_url, visibility, processing_status FROM videos WHERE id = $1", [id]);
-        if (result.rowCount === 0) return res.status(404).json({ error: 'Video not found' });
+        const result = await pool.query("SELECT id, user_id, video_url, visibility FROM videos WHERE id = $1", [id]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
         const video = result.rows[0];
 
         if (video.visibility === 'private' && video.user_id !== requesterId) {
             return res.status(403).json({ error: 'This video is private' });
         }
 
-        if (video.processing_status !== 'ready' && !video.video_480p_url) {
-            res.setHeader('Retry-After', '30');
-            return res.status(425).json({ error: 'Video is still processing' });
+        // For PoC, just serve original upload, ignore processing status and renditions.
+        const fileUrl = video.video_url;
+        if (!fileUrl) {
+            return res.status(404).json({ error: 'Video file URL not found in database' });
         }
 
-        // Choose best available rendition. If processing, fall back to original.
-        let fileUrl = video.video_480p_url || video.video_url;
         const filePath = path.resolve(__dirname, '..', 'uploads', path.basename(fileUrl));
-        let stat;
-        try {
-            stat = await fs.stat(filePath);
-        } catch (e) {
-            return res.status(404).json({ error: 'File not found' });
-        }
-
-        const range = req.headers.range;
-        const mime = getMimeFromExt(filePath);
-        if (!range) {
-            res.writeHead(200, {
-                'Content-Length': stat.size,
-                'Content-Type': mime,
-                'Accept-Ranges': 'bytes',
-            });
-            require('fs').createReadStream(filePath).pipe(res);
-        } else {
-            const parts = range.replace(/bytes=/, '').split('-');
-            const start = parseInt(parts[0], 10);
-            const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-            if (start >= stat.size || end >= stat.size) {
-                res.status(416).set({
-                    'Content-Range': `bytes */${stat.size}`,
-                }).end();
-                return;
+        
+        // Use res.sendFile to serve the whole file. It handles Content-Type, ETag, etc.
+        // We disable range requests to force full download.
+        res.sendFile(filePath, { acceptRanges: false }, (err) => {
+            if (err) {
+                // ENOENT is a common error if file is missing
+                if (err.code === "ENOENT") {
+                    console.error(`File not found for video ${id}: ${filePath}`);
+                    res.status(404).json({ error: 'Video file not found on disk' });
+                } else {
+                    console.error(`Error sending file for video ${id}:`, err);
+                    if (!res.headersSent) {
+                        res.status(500).json({ error: 'Error serving video file' });
+                    }
+                }
             }
-            const chunkSize = end - start + 1;
-            res.writeHead(206, {
-                'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-                'Accept-Ranges': 'bytes',
-                'Content-Length': chunkSize,
-                'Content-Type': mime,
-            });
-            require('fs').createReadStream(filePath, { start, end }).pipe(res);
-        }
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error streaming video' });
+        console.error('Database or other error in streamVideo:', err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Server error while trying to serve video' });
+        }
     }
 };
 
