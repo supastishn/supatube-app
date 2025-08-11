@@ -44,7 +44,7 @@ BEGIN
   NEW.search_vector :=
     setweight(to_tsvector('english', coalesce(NEW.title,'')), 'A') ||
     setweight(to_tsvector('english', coalesce(NEW.description,'')), 'B') ||
-    setweight(to_tsvector('english', coalesce(channel_name, '') || ' ' || coalesce(channel_username, '')), 'C');
+    setweight(to_tsvector('english', concat_ws(' ', channel_name, channel_username)), 'C');
   RETURN NEW;
 END
 $$ LANGUAGE plpgsql;
