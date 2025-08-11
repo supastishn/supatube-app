@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import LoginPrompt from './LoginPrompt';
 
 export type Comment = {
   id: string;
@@ -16,6 +17,7 @@ export default function Comments({ videoId }: { videoId:string }) {
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [text, setText] = useState('');
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -34,7 +36,10 @@ export default function Comments({ videoId }: { videoId:string }) {
   }, [videoId]);
 
   const post = async () => {
-    if (!token) return Alert.alert('Login required', 'Please sign in to comment.');
+    if (!token) {
+      setShowLoginPrompt(true);
+      return;
+    }
     if (!text.trim()) return;
     setPosting(true);
     try {
@@ -76,6 +81,7 @@ export default function Comments({ videoId }: { videoId:string }) {
           {posting ? <ActivityIndicator color="#fff" /> : <Text style={styles.sendText}>Post</Text>}
         </TouchableOpacity>
       </View>
+      <LoginPrompt visible={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} />
     </View>
   );
 }

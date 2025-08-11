@@ -4,9 +4,6 @@ const toggleSubscription = async (req, res) => {
   const { channelId } = req.params;
   const subscriberId = req.user.userId;
 
-  if (+channelId === subscriberId) {
-    return res.status(400).json({ error: 'Cannot subscribe to yourself' });
-  }
 
   const client = await pool.connect();
   try {

@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import Comments from '@/components/Comments';
+import LoginPrompt from '@/components/LoginPrompt';
 import SaveToPlaylistModal from '@/components/SaveToPlaylistModal';
 import VideoCard from '@/components/VideoCard';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -29,6 +30,7 @@ export default function VideoDetailScreen() {
   const [subscribing, setSubscribing] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const load = async () => {
     if (!vid) return;
@@ -50,7 +52,10 @@ export default function VideoDetailScreen() {
   }, [vid]);
 
   const toggleLike = async () => {
-    if (!token) return Alert.alert('Login required', 'Please sign in to like videos.');
+    if (!token) {
+      setShowLoginPrompt(true);
+      return;
+    }
     setLiking(true);
     try {
       await api.post(`/api/videos/${vid}/like`);
@@ -68,7 +73,10 @@ export default function VideoDetailScreen() {
   };
 
   const toggleSubscription = async () => {
-    if (!token || !video?.user_id) return Alert.alert('Login required');
+    if (!token || !video?.user_id) {
+      setShowLoginPrompt(true);
+      return;
+    }
     setSubscribing(true);
     try {
       await api.post(`/api/subscriptions/${video.user_id}/toggle`);
@@ -81,7 +89,10 @@ export default function VideoDetailScreen() {
   };
 
   const openPlaylistSaver = () => {
-    if (!token) return Alert.alert('Login required', 'Please sign in to save videos.');
+    if (!token) {
+      setShowLoginPrompt(true);
+      return;
+    }
     setShowPlaylistModal(true);
   };
 
@@ -149,6 +160,7 @@ export default function VideoDetailScreen() {
         onClose={() => setShowPlaylistModal(false)}
         videoId={vid}
       />
+      <LoginPrompt visible={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} />
     </View>
   );
 }

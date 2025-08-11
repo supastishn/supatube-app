@@ -81,8 +81,7 @@ CREATE TABLE subscriptions (
     subscriber_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     channel_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(subscriber_id, channel_id),
-    CHECK (subscriber_id <> channel_id)
+    UNIQUE(subscriber_id, channel_id)
 );
 
 -- playlists table
