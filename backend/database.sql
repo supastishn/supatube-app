@@ -54,6 +54,9 @@ CREATE TRIGGER trg_videos_tsv_update
 BEFORE INSERT OR UPDATE OF title, description ON videos
 FOR EACH ROW EXECUTE FUNCTION videos_tsv_update();
 
+CREATE INDEX idx_comments_video_id ON comments (video_id);
+CREATE INDEX idx_comments_parent_id ON comments (parent_comment_id);
+
 -- comments table
 CREATE TABLE comments (
     id SERIAL PRIMARY KEY,
@@ -90,6 +93,8 @@ CREATE TABLE subscriptions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(subscriber_id, channel_id)
 );
+
+CREATE INDEX idx_subscriptions_channel_id ON subscriptions (channel_id);
 
 -- playlists table
 CREATE TABLE playlists (
@@ -163,3 +168,5 @@ CREATE TABLE notifications (
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_notifications_user_id_created_at ON notifications(user_id, created_at DESC);
