@@ -20,9 +20,8 @@ const config = getDefaultConfig(projectRoot);
 // config.watchFolders = [workspaceRoot];
 
 // 2. Let Metro know where to resolve packages from. This is for dependencies hoisted
-// to the root `node_modules` by npm workspaces.
+// to the root `node_modules` by npm workspaces. We point it only to the root `node_modules`.
 config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
