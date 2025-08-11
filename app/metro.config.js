@@ -31,7 +31,10 @@ config.resolver.nodeModulesPaths = [
 // `node_modules` is now ignored by the watcher via `unstable_enableGloballyIgnoredDirectories`.
 const existingBlockList = config.resolver.blockList;
 const newBlockList = [
+  // ignore backend and all node_modules
   new RegExp(`${workspaceRoot}/backend/.*`),
+  new RegExp(`${workspaceRoot}/node_modules/.*`),
+  new RegExp(`${projectRoot}/node_modules/.*`),
 ];
 if (existingBlockList) {
   newBlockList.push(existingBlockList);
