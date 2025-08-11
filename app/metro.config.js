@@ -6,7 +6,11 @@ const path = require('path');
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '..');
 
-const config = getDefaultConfig(projectRoot);
+const config = getDefaultConfig(projectRoot, {
+  // Support for ignoring files and directories from watching in a monorepo.
+  // This uses the root .gitignore file.
+  unstable_enableGloballyIgnoredDirectories: true,
+});
 
 // This configuration is for a workspace-like setup where `npm install` is run at the root,
 // and you run the app from the `app` directory.
@@ -20,19 +24,18 @@ const config = getDefaultConfig(projectRoot);
 // config.watchFolders = [workspaceRoot];
 
 // 2. Let Metro know where to resolve packages from. This is for dependencies hoisted
-// to the root `node_modules` by npm workspaces. We point it only to the root `node_modules`.
+// to the root `node_modules` by npm workspaces.
 config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
 // 3. To further reduce watched files, we block directories that don't need to be watched.
 // The default `blockList` is a single RegExp, so we create an array to add rules.
-// We block the `node_modules` within the `app` directory to prevent ENOSPC errors,
-// but we do not block the root `node_modules` which is needed for resolving hoisted packages.
+// `node_modules` is now ignored by the watcher via `unstable_enableGloballyIgnoredDirectories`.
 const existingBlockList = config.resolver.blockList;
 const newBlockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
-  new RegExp(`${projectRoot}/node_modules/.*`),
 ];
 if (existingBlockList) {
   newBlockList.push(existingBlockList);
