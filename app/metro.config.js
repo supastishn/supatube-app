@@ -26,6 +26,10 @@ config.resolver.blockList = [
   new RegExp(`${projectRoot}/\\.expo/.*`),
   // don’t watch the ios folder of expo-document-picker
   new RegExp(`${projectRoot}/node_modules/expo-document-picker/ios/.*`),
+  // exclude all node_modules from project
+  new RegExp(`${projectRoot}/node_modules/.*`),
+  // exclude all node_modules from workspace
+  new RegExp(`${workspaceRoot}/node_modules/.*`),
 ];
 
 module.exports = config;
