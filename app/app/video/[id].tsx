@@ -72,6 +72,15 @@ export default function VideoDetailScreen() {
     }
   };
 
+  useEffect(() => {
+    if (token && vid) {
+      api.post(`/api/history/record`, { videoId: vid }).catch((e) => {
+        // Silently fail is ok here, not a critical feature
+        console.error('Failed to record watch history', e);
+      });
+    }
+  }, [vid, token]);
+
   const toggleSubscription = async () => {
     if (!token || !video?.user_id) {
       setShowLoginPrompt(true);

@@ -36,8 +36,6 @@
         }
       ]
     ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    "experiments": {}
   }
 }
