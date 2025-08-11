@@ -28,13 +28,10 @@ config.resolver.nodeModulesPaths = [
 
 // 3. To further reduce watched files, we block directories that don't need to be watched.
 // The default `blockList` is a single RegExp, so we create an array to add rules.
-// `node_modules` is now ignored by the watcher via `unstable_enableGloballyIgnoredDirectories`.
+// `node_modules` is already ignored by the watcher by default.
 const existingBlockList = config.resolver.blockList;
 const newBlockList = [
-  // ignore backend and all node_modules
   new RegExp(`${workspaceRoot}/backend/.*`),
-  new RegExp(`${workspaceRoot}/node_modules/.*`),
-  new RegExp(`${projectRoot}/node_modules/.*`),
 ];
 if (existingBlockList) {
   newBlockList.push(existingBlockList);
