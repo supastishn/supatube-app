@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import ProfilePopover from '@/components/ProfilePopover';
+import { getFullImageUrl } from '@/lib/api';
 
 export default function TabLayout() {
   const [showPopover, setShowPopover] = useState(false);
