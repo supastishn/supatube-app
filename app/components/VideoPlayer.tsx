@@ -35,7 +35,7 @@ export default function VideoPlayer({ id }: { id: string }) {
 
   const handleError = (errorMsg: string) => {
     setLoading(false);
-    setError(`Playback failed: ${errorMsg}`);
+    setError(`Playback failed: ${errorMsg || 'The video could not be loaded.'}`);
   };
 
   const handleSliderChange = (value: number) => {
