@@ -447,6 +447,51 @@ const getMimeFromExt = (filename) => {
     return 'application/octet-stream';
 };
 
+const streamVideoByFilename = async (req, res) => {
+    const { filename } = req.params;
+    try {
+        // Basic security: only allow filenames, no path components.
+        const safeFilename = path.basename(filename);
+        if (safeFilename !== filename) {
+            console.log(`[streamVideoByFilename] Invalid filename format: ${filename}`);
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        const filePath = path.resolve(__dirname, '..', 'uploads', safeFilename);
+
+        // Check if file exists before attempting to send.
+        await fs.access(filePath);
+        console.log(`[streamVideoByFilename] Serving file: ${filePath}`);
+
+        // Set headers for content type and to allow cross-origin requests, which is crucial for web.
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        const mimeType = getMimeFromExt(filePath);
+        res.setHeader('Content-Type', mimeType);
+
+        // Use res.sendFile, which is more robust as it handles range requests automatically.
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                if (err.code !== 'ECONNABORTED' && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+                    console.error(`[streamVideoByFilename] SEND-FILE-ERROR for ${safeFilename}:`, err);
+                } else {
+                    console.log(`[streamVideoByFilename] INFO: Client aborted request for ${safeFilename}`);
+                }
+            } else {
+                console.log(`[streamVideoByFilename] SEND-FILE-SUCCESS: Sent file ${safeFilename}`);
+            }
+        });
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            console.log(`[streamVideoByFilename] File not found: ${filename}`);
+            return res.status(404).json({ error: 'Video file not found' });
+        }
+        console.error('[streamVideoByFilename] CATCH-ALL-ERROR:', err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Server error while trying to serve video' });
+        }
+    }
+};
+
 const streamVideo = async (req, res) => {
     const { id } = req.params;
     const requesterId = req.user ? req.user.userId : null;
@@ -603,6 +648,7 @@ module.exports = {
     postComment,
     likeVideo,
     streamVideo,
+    streamVideoByFilename,
     streamThumbnail,
     getRecommendedVideos,
 };

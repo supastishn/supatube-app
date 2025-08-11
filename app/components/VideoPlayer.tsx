@@ -2,25 +2,25 @@ import React, { useState, useMemo } from 'react';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { View, StyleSheet, TouchableWithoutFeedback, ActivityIndicator, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { videoStreamUrl } from '@/lib/api';
+import { videoStreamUrlByFilename } from '@/lib/api';
 import Slider from '@react-native-community/slider';
 import { useAuth } from '@/context/AuthContext';
 
-export default function VideoPlayer({ id }: { id: string }) {
+export default function VideoPlayer({ filename }: { filename: string | null | undefined }) {
   const { token } = useAuth();
   const [showControls, setShowControls] = useState(false);
 
   const source = useMemo(() => {
-    if (!id) return null;
+    if (!filename) return null;
     const headers: { [key: string]: string } = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     return {
-      uri: videoStreamUrl(id),
+      uri: videoStreamUrlByFilename(filename),
       headers,
     };
-  }, [id, token]);
+  }, [filename, token]);
 
   const player = useVideoPlayer(source);
 

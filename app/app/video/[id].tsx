@@ -88,10 +88,12 @@ export default function VideoDetailScreen() {
   if (loading || !vid) return <ActivityIndicator style={{ marginTop: 24 }} />;
   if (!video) return <Text style={{ margin: 16 }}>Video not found</Text>;
 
+  const fileToStream = video?.video_480p_url?.split('/').pop() || video?.video_url?.split('/').pop();
+
   return (
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
-        <VideoPlayer id={vid} />
+        <VideoPlayer filename={fileToStream} />
 
         <View style={styles.metaContainer}>
           <Text style={styles.title}>{video.title}</Text>

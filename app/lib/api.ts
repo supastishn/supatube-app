@@ -122,3 +122,7 @@ export const api = {
 export function videoStreamUrl(id: string) {
   return `${BASE_URL}/api/videos/${id}/stream`;
 }
+
+export function videoStreamUrlByFilename(filename: string) {
+  return `${BASE_URL}/api/videos/${filename}`;
+}

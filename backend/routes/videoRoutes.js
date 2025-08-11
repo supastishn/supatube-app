@@ -9,6 +9,7 @@ const {
     postComment,
     likeVideo,
     streamVideo,
+    streamVideoByFilename,
     streamThumbnail,
     getRecommendedVideos
 } = require('../controllers/videoController');
@@ -21,6 +22,10 @@ const router = express.Router();
 router.route('/')
     .post(authenticateToken, upload.fields([{ name: 'video', maxCount: 1 }, { name: 'thumbnail', maxCount: 1 }]), uploadVideo)
     .get(optionalAuthenticateToken, getAllVideos);
+
+// Route for streaming by filename. MUST be before /:id to avoid conflict.
+// The regex ensures this only matches paths that contain a dot.
+router.get('/:filename([^/]+\\.[^/]+)', optionalAuthenticateToken, streamVideoByFilename);
 
 router.route('/:id')
     .get(optionalAuthenticateToken, getVideoById)
