@@ -8,29 +8,33 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// --- Monorepo setup ---
-// This configuration is tailored for a monorepo setup.
+// This configuration is for a workspace-like setup where `npm install` is run at the root,
+// and you run the app from the `app` directory.
 
-// 1. Watch all files in the monorepo
-config.watchFolders = [workspaceRoot];
+// 1. Watch only files in the project root (`app` directory). This prevents watching
+// the root node_modules and helps avoid the ENOSPC error.
+config.watchFolders = [projectRoot];
 
-// 2. Let Metro know where to resolve packages.
-// This is crucial for hoisted dependencies in the root node_modules.
+// 2. Let Metro know where to resolve packages from. This is for dependencies hoisted
+// to the root `node_modules` by npm workspaces.
 config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// 3. Force Metro to resolve symlinks to their real path.
-config.resolver.resolveSymlinks = false;
-
-// We do NOT block node_modules, as that causes the resolution error.
-// Instead, we block other parts of the monorepo that are not part of the app
-// bundle to reduce the number of files watched.
-config.resolver.blockList = [
-  // Default block list includes .expo, let's keep it and add our own.
-  ...config.resolver.blockList,
-  // We don't need to watch the backend folder for the frontend app.
+// 3. To further reduce watched files, we block the `backend` directory.
+// The default `blockList` is a single RegExp, so we create an array to add rules.
+const existingBlockList = config.resolver.blockList;
+const newBlockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
 ];
+if (existingBlockList) {
+  newBlockList.push(existingBlockList);
+}
+config.resolver.blockList = newBlockList;
+
+
+// 4. For workspaces, it's often recommended to disable symlink resolution.
+config.resolver.resolveSymlinks = false;
 
 module.exports = config;
