@@ -450,23 +450,31 @@ const getMimeFromExt = (filename) => {
 const streamVideo = async (req, res) => {
     const { id } = req.params;
     const requesterId = req.user ? req.user.userId : null;
+    console.log(`[streamVideo] START: videoId=${id}, requesterId=${requesterId || 'anonymous'}`);
+    console.log(`[streamVideo] Headers: ${JSON.stringify(req.headers)}`);
+
     try {
         const result = await pool.query("SELECT id, user_id, video_url, visibility FROM videos WHERE id = $1", [id]);
         if (result.rowCount === 0) {
+            console.log(`[streamVideo] DB NOT FOUND: No video found for id=${id}`);
             return res.status(404).json({ error: 'Video not found' });
         }
         const video = result.rows[0];
+        console.log(`[streamVideo] DB SUCCESS: Found video record: ${JSON.stringify(video)}`);
 
-        if (video.visibility === 'private' && video.user_id !== requesterId) {
+        if (video.visibility === 'private' && String(video.user_id) !== String(requesterId)) {
+            console.log(`[streamVideo] AUTHZ FAILED: Private video access denied. owner=${video.user_id}, requester=${requesterId}`);
             return res.status(403).json({ error: 'This video is private' });
         }
 
         const fileUrl = video.video_url;
         if (!fileUrl) {
+            console.log(`[streamVideo] FILE URL MISSING: video.video_url is null or empty for id=${id}`);
             return res.status(404).json({ error: 'Video file URL not found in database' });
         }
 
         const filePath = path.resolve(__dirname, '..', 'uploads', path.basename(fileUrl));
+        console.log(`[streamVideo] RESOLVED PATH: Serving file from ${filePath}`);
 
         // Use res.sendFile, which is more robust as it handles range requests automatically.
         // It will correctly send 206 Partial Content responses when the client requests them.
@@ -474,12 +482,16 @@ const streamVideo = async (req, res) => {
             if (err) {
                 // Don't log an error if the client aborts the connection.
                 if (err.code !== 'ECONNABORTED' && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-                    console.error(`Error sending file for video ${id}:`, err);
+                    console.error(`[streamVideo] SEND-FILE-ERROR for video ${id}:`, err);
+                } else {
+                    console.log(`[streamVideo] INFO: Client aborted request for video ${id}`);
                 }
+            } else {
+                console.log(`[streamVideo] SEND-FILE-SUCCESS: Sent file for video ${id}`);
             }
         });
     } catch (err) {
-        console.error('Error in streamVideo:', err);
+        console.error('[streamVideo] CATCH-ALL-ERROR:', err);
         if (!res.headersSent) {
             res.status(500).json({ error: 'Server error while trying to serve video' });
         }
