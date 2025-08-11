@@ -23,7 +23,7 @@ export default function CreatePlaylistScreen() {
     setLoading(true);
     try {
       await api.post('/api/playlists', { title, description, visibility });
-      router.back();
+      router.replace({ pathname: '/playlists/index', params: { refresh: Date.now().toString() } });
     } catch (e: any) {
       Alert.alert('Error', e.message);
     } finally {

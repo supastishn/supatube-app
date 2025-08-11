@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { Link, useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 
 type Playlist = { id: string; title: string; video_count: number; visibility: string };
@@ -9,6 +9,7 @@ type Playlist = { id: string; title: string; video_count: number; visibility: st
 export default function PlaylistsScreen() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
+  const params = useLocalSearchParams();
 
   const load = async () => {
     setLoading(true);
@@ -25,7 +26,7 @@ export default function PlaylistsScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [])
+    }, [params.refresh])
   );
 
   if (loading) return <ActivityIndicator style={{ marginTop: 24 }} />;
