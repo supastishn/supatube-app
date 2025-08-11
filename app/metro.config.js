@@ -20,10 +20,10 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// Block everything in node_modules except expo and react-native packages
+// Block everything in node_modules except required packages
 config.resolver.blockList = [
   new RegExp(`${projectRoot}/\.expo/.*`),
-  new RegExp(`${projectRoot}/node_modules/(?!(expo|@expo|react-native|@react-native)/).*`),
+  new RegExp(`${projectRoot}/node_modules/(?!(expo|expo-router|@expo|react-native|@react-native)/).*`),
 ];
 
 module.exports = config;
