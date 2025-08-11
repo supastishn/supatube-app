@@ -20,16 +20,18 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// Block files that metro should not watch
+// Block specific directories from being watched
 config.resolver.blockList = [
-  // don’t watch Expo’s own cache
-  new RegExp(`${projectRoot}/\\.expo/.*`),
-  // don’t watch the ios folder of expo-document-picker
+  // .expo cache
+  new RegExp(`${projectRoot}/\.expo/.*`),
+  // specific problematic modules
   new RegExp(`${projectRoot}/node_modules/expo-document-picker/ios/.*`),
-  // exclude all node_modules from project
-  new RegExp(`${projectRoot}/node_modules/.*`),
-  // exclude all node_modules from workspace
-  new RegExp(`${workspaceRoot}/node_modules/.*`),
+  // large JavaScript directories that shouldn't be watched
+  new RegExp(`${projectRoot}/node_modules\/.*\/node_modules\/.*`),
+  new RegExp(`${projectRoot}/node_modules\/.*\/scaffolded\-.*`),
+  new RegExp(`${projectRoot}/node_modules\/.*\/docgoogle\/.*`),
+  new RegExp(`${projectRoot}/node_modules\/.*\/third\-party\/.*`),
+  new RegExp(`${projectRoot}/node_modules\/.*\/dist\-types\/.*`),
 ];
 
 module.exports = config;
