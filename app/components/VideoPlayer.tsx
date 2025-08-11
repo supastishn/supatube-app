@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'black',
     position: 'relative',
+    padding: 20,
   },
   videoContainer: {
     width: '100%',

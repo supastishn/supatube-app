@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, RefreshControl, ActivityIndicator, StyleSheet, Text, Alert } from 'react-native';
+import { View, FlatList, RefreshControl, ActivityIndicator, StyleSheet, Text, Alert, TouchableOpacity } from 'react-native';
 import VideoCard, { Video } from '@/components/VideoCard';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
