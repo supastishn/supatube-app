@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Video, AVPlaybackSource } from 'expo-av';
+import React, { useState, useMemo } from 'react';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { View, StyleSheet, TouchableWithoutFeedback, ActivityIndicator, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { videoStreamUrl } from '@/lib/api';
@@ -8,58 +8,39 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function VideoPlayer({ id }: { id: string }) {
   const { token } = useAuth();
-  const video = useRef<Video>(null);
-  const [status, setStatus] = useState<any>({});
   const [showControls, setShowControls] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [source, setSource] = useState<AVPlaybackSource | null>(null);
 
-  useEffect(() => {
-    if (!id) return;
-
+  const source = useMemo(() => {
+    if (!id) return null;
     const headers: { [key: string]: string } = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    setSource({
+    return {
       uri: videoStreamUrl(id),
       headers,
-    });
+    };
   }, [id, token]);
 
+  const player = useVideoPlayer(source);
+
   const togglePlayPause = () => {
-    if (status?.isPlaying) {
-      video.current?.pauseAsync();
+    if (player.playing) {
+      player.pause();
     } else {
-      video.current?.playAsync();
+      player.play();
     }
     setShowControls(true);
   };
 
-  const handleLoadStart = () => {
-    setLoading(true);
-    setError(null);
-  };
-
-  const handleLoad = (payload: any) => {
-    setLoading(false);
-    if (payload.isLoaded) {
-      setStatus(payload);
+  const handleSliderChange = (value: number) => {
+    if (player.duration) {
+      player.seek(value * player.duration);
     }
   };
 
-  const handleError = (errorMsg: string) => {
-    setLoading(false);
-    setError(`Playback failed: ${errorMsg || 'The video could not be loaded.'}`);
-  };
-
-  const handleSliderChange = (value: number) => {
-    video.current?.setPositionAsync(value * (status?.durationMillis || 0));
-  };
-
-  const formatTime = (ms?: number) => {
-    if (!ms || isNaN(ms)) return '0:00';
+  const formatTime = (ms?: number | null) => {
+    if (ms === undefined || ms === null || isNaN(ms)) return '0:00';
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -70,46 +51,37 @@ export default function VideoPlayer({ id }: { id: string }) {
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={() => setShowControls(!showControls)}>
         <View style={styles.videoContainer}>
-          <Video
-            ref={video}
+          <VideoView
+            player={player}
             style={styles.video}
-            source={source}
-            useNativeControls={false}
-            resizeMode="contain"
-            isLooping={false}
-            onPlaybackStatusUpdate={setStatus as any}
-            onLoadStart={handleLoadStart}
-            onLoad={handleLoad}
-            onError={handleError}
+            nativeControls={false}
+            contentFit="contain"
+            allowsFullscreen
           />
 
-          {loading && (
+          {player.loading && (
             <View style={styles.loading}>
               <ActivityIndicator color="#fff" size="large" />
             </View>
           )}
 
-          {error && (
+          {player.error && (
             <View style={styles.error}>
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.errorText}>Playback failed: {player.error}</Text>
             </View>
           )}
         </View>
       </TouchableWithoutFeedback>
 
-      {showControls && !loading && !error && (
+      {showControls && !player.loading && !player.error && (
         <View style={styles.controls}>
           <TouchableWithoutFeedback onPress={togglePlayPause}>
-            <Ionicons 
-              name={status?.isPlaying ? 'pause' : 'play'} 
-              size={32} 
-              color="white" 
-            />
+            <Ionicons name={player.playing ? 'pause' : 'play'} size={32} color="white" />
           </TouchableWithoutFeedback>
 
           <Slider
             style={styles.slider}
-            value={(status?.positionMillis || 0) / (status?.durationMillis || 1)}
+            value={(player.position || 0) / (player.duration || 1)}
             onValueChange={handleSliderChange}
             minimumValue={0}
             maximumValue={1}
@@ -119,7 +91,7 @@ export default function VideoPlayer({ id }: { id: string }) {
           />
 
           <Text style={styles.time}>
-            {formatTime(status?.positionMillis)} / {formatTime(status?.durationMillis)}
+            {formatTime(player.position)} / {formatTime(player.duration)}
           </Text>
         </View>
       )}
