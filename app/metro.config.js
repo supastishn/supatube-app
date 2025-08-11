@@ -11,9 +11,13 @@ const config = getDefaultConfig(projectRoot);
 // This configuration is for a workspace-like setup where `npm install` is run at the root,
 // and you run the app from the `app` directory.
 
-// 1. Watch all files in the workspace. This is necessary for Metro to resolve
-// dependencies hoisted to the root `node_modules` folder.
-config.watchFolders = [workspaceRoot];
+// 1. Watch all files in the workspace. Metro's default behavior is to NOT watch files
+// outside of the project root. With a monorepo, we want to watch the entire workspace.
+// However, watching the root node_modules directory can exceed file watcher limits (ENOSPC error).
+// A better approach for this setup is to let Metro watch only the project root (`app`) by default
+// and explicitly tell it where to find hoisted dependencies via `nodeModulesPaths`.
+// By commenting out `watchFolders`, it defaults to the project root.
+// config.watchFolders = [workspaceRoot];
 
 // 2. Let Metro know where to resolve packages from. This is for dependencies hoisted
 // to the root `node_modules` by npm workspaces.
@@ -24,12 +28,10 @@ config.resolver.nodeModulesPaths = [
 
 // 3. To further reduce watched files, we block directories that don't need to be watched.
 // The default `blockList` is a single RegExp, so we create an array to add rules.
+// We do NOT block `node_modules` here, as that would prevent module resolution.
 const existingBlockList = config.resolver.blockList;
 const newBlockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
-  // The following entries are needed to address an ENOSPC issue with the system's file watcher limits.
-  new RegExp(`${workspaceRoot}/node_modules/.*`),
-  new RegExp(`${projectRoot}/node_modules/.*`),
 ];
 if (existingBlockList) {
   newBlockList.push(existingBlockList);
