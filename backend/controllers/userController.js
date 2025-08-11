@@ -98,7 +98,7 @@ const updateUserProfile = async (req, res) => {
     try {
       await client.query('BEGIN');
 
-      if (name) {
+      if (name !== undefined) {
         await client.query(
           'UPDATE users SET name = $1 WHERE id = $2',
           [name, userId]
@@ -120,7 +120,7 @@ const updateUserProfile = async (req, res) => {
       }
 
       const result = await client.query(
-        'SELECT id, username, name, created_at FROM users WHERE id = $1',
+        'SELECT id, username, name, avatar_url, created_at FROM users WHERE id = $1',
         [userId]
       );
       await client.query('COMMIT');
