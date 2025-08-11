@@ -22,11 +22,14 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// 3. To further reduce watched files, we block the `backend` directory.
+// 3. To further reduce watched files, we block directories that don't need to be watched.
 // The default `blockList` is a single RegExp, so we create an array to add rules.
 const existingBlockList = config.resolver.blockList;
 const newBlockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
+  // The following entries are needed to address an ENOSPC issue with the system's file watcher limits.
+  new RegExp(`${workspaceRoot}/node_modules/.*`),
+  new RegExp(`${projectRoot}/node_modules/.*`),
 ];
 if (existingBlockList) {
   newBlockList.push(existingBlockList);
