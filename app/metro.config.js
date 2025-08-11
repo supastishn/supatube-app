@@ -8,19 +8,29 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
+// --- Monorepo setup ---
+// This configuration is tailored for a monorepo setup.
 
-// Watch only files in the project root
-config.watchFolders = [projectRoot];
-// Let Metro know where to resolve packages and in what order
-/*config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
+// 1. Watch all files in the monorepo
+config.watchFolders = [workspaceRoot];
+
+// 2. Let Metro know where to resolve packages.
+// This is crucial for hoisted dependencies in the root node_modules.
+config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
-];*/
+];
 
-// To prevent ENOSPC (System limit for file watchers) errors, we block Metro from watching node_modules.
+// 3. Force Metro to resolve symlinks to their real path.
+config.resolver.resolveSymlinks = false;
+
+// We do NOT block node_modules, as that causes the resolution error.
+// Instead, we block other parts of the monorepo that are not part of the app
+// bundle to reduce the number of files watched.
 config.resolver.blockList = [
-  new RegExp(`${projectRoot}/\.expo/.*`),
-  new RegExp(`${projectRoot}/node_modules/.*`),
+  // Default block list includes .expo, let's keep it and add our own.
+  ...config.resolver.blockList,
+  // We don't need to watch the backend folder for the frontend app.
+  new RegExp(`${workspaceRoot}/backend/.*`),
 ];
 
 module.exports = config;
