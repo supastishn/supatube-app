@@ -24,6 +24,8 @@ config.resolver.nodeModulesPaths = [
 config.resolver.blockList = [
   new RegExp(`${projectRoot}/.expo/.*`),
   new RegExp(`${projectRoot}/node_modules/expo-document-picker/ios/.*`),
+  new RegExp(`${projectRoot}/node_modules/.*`),
+  new RegExp(`${workspaceRoot}/node_modules/.*`),
 ];
 
 module.exports = config;
