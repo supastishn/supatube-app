@@ -8,9 +8,6 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// Let Metro use Watchman for file watching, as it is more efficient for
-// large projects and can prevent "too many file watchers" errors.
-// Make sure Watchman is installed on your system.
 
 // Watch only files in the project root
 config.watchFolders = [projectRoot];
@@ -20,10 +17,10 @@ config.watchFolders = [projectRoot];
   path.resolve(workspaceRoot, 'node_modules'),
 ];*/
 
-// Block everything in node_modules except required packages
+// To prevent ENOSPC (System limit for file watchers) errors, we block Metro from watching node_modules.
 config.resolver.blockList = [
   new RegExp(`${projectRoot}/\.expo/.*`),
-
+  new RegExp(`${projectRoot}/node_modules/.*`),
 ];
 
 module.exports = config;
