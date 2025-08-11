@@ -1,16 +1,30 @@
-import React, { useState, useRef } from 'react';
-import { Video, VideoProps } from 'expo-av';
+import React, { useState, useRef, useEffect } from 'react';
+import { Video, AVPlaybackSource } from 'expo-av';
 import { View, StyleSheet, TouchableWithoutFeedback, ActivityIndicator, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { videoStreamUrl } from '@/lib/api';
 import Slider from '@react-native-community/slider';
+import { useAuth } from '@/context/AuthContext';
 
 export default function VideoPlayer({ id }: { id: string }) {
+  const { token } = useAuth();
   const video = useRef<Video>(null);
   const [status, setStatus] = useState<any>({});
   const [showControls, setShowControls] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<AVPlaybackSource | null>(null);
+
+  useEffect(() => {
+    const headers: { [key: string]: string } = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    setSource({
+      uri: videoStreamUrl(id),
+      headers,
+    });
+  }, [id, token]);
 
   const togglePlayPause = () => {
     if (status?.isPlaying) {
@@ -57,7 +71,7 @@ export default function VideoPlayer({ id }: { id: string }) {
           <Video
             ref={video}
             style={styles.video}
-            source={{ uri: videoStreamUrl(id) }}
+            source={source}
             useNativeControls={false}
             resizeMode="contain"
             isLooping={false}
