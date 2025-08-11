@@ -119,6 +119,14 @@ export const api = {
   delete: (p: string) => request(p, { method: 'DELETE' }),
 };
 
+export function getFullImageUrl(path?: string | null): string | undefined {
+  if (!path) return undefined;
+  if (path.startsWith('http') || path.startsWith('file:') || path.startsWith('data:')) {
+    return path;
+  }
+  return BASE_URL + path;
+}
+
 export function videoStreamUrl(id: string) {
   return `${BASE_URL}/api/videos/${id}/stream`;
 }

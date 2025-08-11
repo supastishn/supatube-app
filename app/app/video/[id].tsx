@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { api, getFullImageUrl } from '@/lib/api';
 import Comments from '@/components/Comments';
 import LoginPrompt from '@/components/LoginPrompt';
 import SaveToPlaylistModal from '@/components/SaveToPlaylistModal';
@@ -110,7 +110,7 @@ export default function VideoDetailScreen() {
           <Text style={styles.title}>{video.title}</Text>
           <View style={styles.channelRow}>
             {video.channel?.avatar_url ? (
-              <Image source={{ uri: video.channel.avatar_url }} style={styles.avatar} />
+              <Image source={{ uri: getFullImageUrl(video.channel.avatar_url) }} style={styles.avatar} />
             ) : (
               <View style={styles.avatar} />
             )}

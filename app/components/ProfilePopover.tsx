@@ -2,6 +2,7 @@ import React from 'react';
 import { Image, Modal, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { getFullImageUrl } from '@/lib/api';
 
 interface ProfilePopoverProps {
   visible: boolean;
@@ -43,7 +44,7 @@ export default function ProfilePopover({
         {loggedIn && user && (
           <View style={styles.userInfo}>
             {user.avatar_url ? (
-              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
+              <Image source={{ uri: getFullImageUrl(user.avatar_url) }} style={styles.avatar} />
             ) : (
               <FontAwesome name="user-circle-o" size={40} color="#555" />
             )}

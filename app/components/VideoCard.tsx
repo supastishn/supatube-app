@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
+import { getFullImageUrl } from '@/lib/api';
 
 export type Video = {
   id: string;
@@ -49,7 +50,7 @@ export default function VideoCard({ video }: { video: Video }) {
           )}
           <View style={styles.metaRow}>
             {video?.channel?.avatarUrl ? (
-              <Image source={{ uri: video.channel.avatarUrl }} style={styles.avatar} />
+              <Image source={{ uri: getFullImageUrl(video.channel.avatarUrl) }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]} />
             )}

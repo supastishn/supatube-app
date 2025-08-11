@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { api, getFullImageUrl } from '@/lib/api';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -109,7 +109,7 @@ export default function SettingsScreen() {
       <Text style={styles.header}>Profile Settings</Text>
       <View style={styles.avatarContainer}>
         <Image
-          source={{ uri: avatar?.uri || user.avatar_url }}
+          source={{ uri: getFullImageUrl(avatar?.uri || user.avatar_url) }}
           style={styles.avatar}
           key={avatar?.uri || user.avatar_url}
         />

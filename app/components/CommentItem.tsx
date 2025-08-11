@@ -1,6 +1,7 @@
 import { FontAwesome } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { getFullImageUrl } from '@/lib/api';
 import { Comment } from './Comments';
 import { timeSince } from './VideoCard';
 
@@ -14,7 +15,7 @@ export default function CommentItem({
   return (
     <View style={styles.commentOuter}>
       <View style={styles.commentContainer}>
-        <Image source={{ uri: comment.avatar_url }} style={styles.avatar} />
+        <Image source={{ uri: getFullImageUrl(comment.avatar_url) }} style={styles.avatar} />
         <View style={styles.commentBody}>
           <Text style={styles.author}>
             {comment.username || 'User'}
