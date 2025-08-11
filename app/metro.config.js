@@ -12,8 +12,8 @@ const config = getDefaultConfig(projectRoot);
 // large projects and can prevent "too many file watchers" errors.
 // Make sure Watchman is installed on your system.
 
-// Watch all files in the monorepo
-config.watchFolders = [workspaceRoot];
+// Watch only files in the project root
+config.watchFolders = [projectRoot];
 // Let Metro know where to resolve packages and in what order
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
@@ -22,8 +22,6 @@ config.resolver.nodeModulesPaths = [
 
 // Block files that metro should not watch
 config.resolver.blockList = [
-  new RegExp(`${workspaceRoot}/backend/.*`),
-  new RegExp(`${workspaceRoot}/.git/.*`),
   new RegExp(`${projectRoot}/.expo/.*`),
 ];
 
