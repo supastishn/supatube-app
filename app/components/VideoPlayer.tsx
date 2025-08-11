@@ -16,19 +16,16 @@ export default function VideoPlayer({ id }: { id: string }) {
   const [source, setSource] = useState<AVPlaybackSource | null>(null);
 
   useEffect(() => {
-    // Add a 1-second delay before loading to help visualize loading state.
-    const timer = setTimeout(() => {
-      const headers: { [key: string]: string } = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      setSource({
-        uri: videoStreamUrl(id),
-        headers,
-      });
-    }, 1000);
+    if (!id) return;
 
-    return () => clearTimeout(timer);
+    const headers: { [key: string]: string } = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    setSource({
+      uri: videoStreamUrl(id),
+      headers,
+    });
   }, [id, token]);
 
   const togglePlayPause = () => {
