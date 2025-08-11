@@ -3,11 +3,11 @@
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "CHOKIDAR_USEPOLLING=1 expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "android": "CHOKIDAR_USEPOLLING=1 expo start --android",
+    "ios": "CHOKIDAR_USEPOLLING=1 expo start --ios",
+    "web": "CHOKIDAR_USEPOLLING=1 expo start --web",
     "lint": "expo lint"
   },
   "dependencies": {
