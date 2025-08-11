@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { View, StyleSheet, TouchableWithoutFeedback, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, TouchableWithoutFeedback, ActivityIndicator, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { videoStreamUrl } from '@/lib/api';
 import Slider from '@react-native-community/slider';
@@ -79,16 +79,20 @@ export default function VideoPlayer({ id }: { id: string }) {
             <Ionicons name={player.playing ? 'pause' : 'play'} size={32} color="white" />
           </TouchableWithoutFeedback>
 
-          <Slider
-            style={styles.slider}
-            value={(player.position || 0) / (player.duration || 1)}
-            onValueChange={handleSliderChange}
-            minimumValue={0}
-            maximumValue={1}
-            minimumTrackTintColor="#FF0000"
-            maximumTrackTintColor="#FFFFFF4D"
-            thumbTintColor="#FF0000"
-          />
+          {Platform.OS !== 'web' ? (
+            <Slider
+              style={styles.slider}
+              value={(player.position || 0) / (player.duration || 1)}
+              onValueChange={handleSliderChange}
+              minimumValue={0}
+              maximumValue={1}
+              minimumTrackTintColor="#FF0000"
+              maximumTrackTintColor="#FFFFFF4D"
+              thumbTintColor="#FF0000"
+            />
+          ) : (
+            <View style={styles.slider} />
+          )}
 
           <Text style={styles.time}>
             {formatTime(player.position)} / {formatTime(player.duration)}
