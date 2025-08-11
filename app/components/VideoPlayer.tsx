@@ -54,7 +54,7 @@ export default function VideoPlayer({ id }: { id: string }) {
           <VideoView
             player={player}
             style={styles.video}
-            nativeControls={false}
+            nativeControls={Platform.OS === 'web'}
             contentFit="contain"
             allowsFullscreen
           />
@@ -73,7 +73,7 @@ export default function VideoPlayer({ id }: { id: string }) {
         </View>
       </TouchableWithoutFeedback>
 
-      {showControls && !player.loading && !player.error && (
+      {showControls && !player.loading && !player.error && Platform.OS !== 'web' && (
         <View style={styles.controls}>
           <TouchableWithoutFeedback onPress={togglePlayPause}>
             <Ionicons name={player.playing ? 'pause' : 'play'} size={32} color="white" />

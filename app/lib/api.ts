@@ -23,7 +23,8 @@ function getDefaultBaseUrl() {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     // pick up whatever host the web app is served from, but hit port 3001
     const { protocol, hostname } = window.location;
-    return `${protocol}//${hostname}:3001`;
+    const resolvedHostname = hostname === 'localhost' ? '127.0.0.1' : hostname;
+    return `${protocol}//${resolvedHostname}:3001`;
   }
 
   // fallback for iOS simulator
