@@ -1,9 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Video, VideoProps } from 'expo-av';
-import { View, StyleSheet, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableWithoutFeedback, ActivityIndicator, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { videoStreamUrl } from '@/lib/api';
-import ThemedText from '@/components/ThemedText';
 import Slider from '@react-native-community/slider';
 
 export default function VideoPlayer({ id }: { id: string }) {
@@ -76,7 +75,7 @@ export default function VideoPlayer({ id }: { id: string }) {
 
           {error && (
             <View style={styles.error}>
-              <ThemedText style={styles.errorText}>{error}</ThemedText>
+              <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
         </View>
@@ -103,9 +102,9 @@ export default function VideoPlayer({ id }: { id: string }) {
             thumbTintColor="#FF0000"
           />
 
-          <ThemedText style={styles.time}>
+          <Text style={styles.time}>
             {formatTime(status?.positionMillis)} / {formatTime(status?.durationMillis)}
-          </ThemedText>
+          </Text>
         </View>
       )}
     </View>
