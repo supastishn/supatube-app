@@ -461,32 +461,58 @@ const streamVideo = async (req, res) => {
             return res.status(403).json({ error: 'This video is private' });
         }
 
-        // For PoC, just serve original upload, ignore processing status and renditions.
         const fileUrl = video.video_url;
         if (!fileUrl) {
             return res.status(404).json({ error: 'Video file URL not found in database' });
         }
 
         const filePath = path.resolve(__dirname, '..', 'uploads', path.basename(fileUrl));
-        
-        // Use res.sendFile to serve the whole file. It handles Content-Type, ETag, etc.
-        // We disable range requests to force full download.
-        res.sendFile(filePath, { acceptRanges: false }, (err) => {
-            if (err) {
-                // ENOENT is a common error if file is missing
-                if (err.code === "ENOENT") {
-                    console.error(`File not found for video ${id}: ${filePath}`);
-                    res.status(404).json({ error: 'Video file not found on disk' });
-                } else {
-                    console.error(`Error sending file for video ${id}:`, err);
-                    if (!res.headersSent) {
-                        res.status(500).json({ error: 'Error serving video file' });
-                    }
-                }
+
+        let stat;
+        try {
+            stat = await fs.stat(filePath);
+        } catch (e) {
+            if (e.code === 'ENOENT') {
+                return res.status(404).json({ error: 'Video file not found on disk' });
             }
-        });
+            throw e; // re-throw other errors
+        }
+
+        const fileSize = stat.size;
+        const range = req.headers.range;
+        const mime = getMimeFromExt(filePath);
+
+        if (range) {
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+            if(start >= fileSize) {
+                res.status(416).set('Content-Range', `bytes */${fileSize}`);
+                return res.end();
+            }
+
+            const chunksize = (end - start) + 1;
+            const file = require('fs').createReadStream(filePath, {start, end});
+            const head = {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize,
+                'Content-Type': mime,
+            };
+            res.writeHead(206, head);
+            file.pipe(res);
+        } else {
+            const head = {
+                'Content-Length': fileSize,
+                'Content-Type': mime,
+                'Accept-Ranges': 'bytes'
+            };
+            res.writeHead(200, head);
+            require('fs').createReadStream(filePath).pipe(res);
+        }
     } catch (err) {
-        console.error('Database or other error in streamVideo:', err);
+        console.error('Error in streamVideo:', err);
         if (!res.headersSent) {
             res.status(500).json({ error: 'Server error while trying to serve video' });
         }
