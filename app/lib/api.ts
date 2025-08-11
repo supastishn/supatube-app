@@ -5,30 +5,7 @@ import { getValueFor } from './storage';
 const TOKEN_KEY = 'auth_token';
 
 function getDefaultBaseUrl() {
-  const env = (Constants?.expoConfig as any)?.extra?.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_API_URL;
-  if (env) return env;
-
-  if (Platform.OS === 'android') {
-    // 10.0.2.2 is the special IP for the Android emulator to connect to the host machine's localhost.
-    // If you are running the app on a physical Android device, you need to replace this
-    // with your computer's IP address on the local network.
-    // You can also set the EXPO_PUBLIC_API_URL environment variable to override this.
-    return 'http://10.0.2.2:3001';
-  } else if (Platform.OS === 'ios') {
-    // For iOS simulator, localhost works directly. For physical iOS devices, same as Android,
-    // you'll need to use your computer's local network IP.
-    return 'http://127.0.0.1:3001';
-  }
-
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    // pick up whatever host the web app is served from, but hit port 3001
-    const { protocol, hostname } = window.location;
-    const resolvedHostname = hostname === 'localhost' ? '127.0.0.1' : hostname;
-    return `${protocol}//${resolvedHostname}:3001`;
-  }
-
-  // fallback for iOS simulator
-  return 'http://127.0.0.1:3001';
+  return 'https://supatube.supastishn.hackclub.app';
 }
 
 export const BASE_URL = getDefaultBaseUrl();
