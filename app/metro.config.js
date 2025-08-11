@@ -15,15 +15,15 @@ const config = getDefaultConfig(projectRoot);
 // Watch only files in the project root
 config.watchFolders = [projectRoot];
 // Let Metro know where to resolve packages and in what order
-config.resolver.nodeModulesPaths = [
+/*config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
-];
+];*/
 
 // Block everything in node_modules except required packages
 config.resolver.blockList = [
   new RegExp(`${projectRoot}/\.expo/.*`),
-  new RegExp(`${projectRoot}/node_modules/(?!(expo|expo-router|@expo|react-native|@react-native)/).*`),
+
 ];
 
 module.exports = config;
