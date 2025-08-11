@@ -31,7 +31,11 @@ export default function TabLayout() {
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.profileBtn} onPress={() => setShowPopover(true)}>
-                <FontAwesome name="user-circle" size={24} color={token ? '#ff0000' : '#888'} />
+                {token && user?.avatar_url ? (
+                  <Image source={{ uri: getFullImageUrl(user.avatar_url) }} style={styles.avatar} />
+                ) : (
+                  <FontAwesome name="user-circle" size={24} color="#888" />
+                )}
               </TouchableOpacity>
             </View>
           ),
@@ -107,5 +111,10 @@ const styles = StyleSheet.create({
   profileBtn: {
     // marginRight: 16,
     // padding: 8,
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
 });
