@@ -35,7 +35,7 @@ const listChannelSubscribers = async (req, res) => {
   const { channelId } = req.params;
   try {
     const result = await pool.query(
-      `SELECT u.id, u.username, s.created_at as subscribed_at
+      `SELECT u.id, u.name as username, u.avatar_url, s.created_at as subscribed_at
        FROM subscriptions s
        JOIN users u ON s.subscriber_id = u.id
        WHERE s.channel_id = $1
@@ -54,7 +54,7 @@ const listSubscriptionsFeed = async (req, res) => {
   const userId = req.user.userId;
   try {
     const result = await pool.query(
-      `SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel
+      `SELECT v.*, json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel
        FROM videos v
        JOIN subscriptions s ON v.user_id = s.channel_id
        JOIN users u ON u.id = v.user_id

@@ -8,7 +8,12 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  Image,
+  TextInput,
+  Platform,
 } from 'react-native';
+import { useAuth } from '@/context/AuthContext';
+import * as DocumentPicker from 'expo-document-picker';
 
 type Settings = {
   record_watch_history: boolean;
@@ -16,9 +21,13 @@ type Settings = {
 };
 
 export default function SettingsScreen() {
+  const { user, refetchUser } = useAuth();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [name, setName] = useState(user?.name || '');
+  const [avatar, setAvatar] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -34,7 +43,45 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     load();
-  }, []);
+    if (user) {
+      setName(user.name);
+    }
+  }, [user]);
+
+  const pickAvatar = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: 'image/*' });
+    if (!result.canceled) setAvatar(result.assets[0]);
+  };
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      if (name !== user.name) {
+        await api.patch('/api/users/me', { name });
+      }
+      if (avatar) {
+        const formData = new FormData();
+        if (Platform.OS === 'web' && avatar.file) {
+          formData.append('avatar', avatar.file);
+        } else {
+          formData.append('avatar', {
+            uri: avatar.uri,
+            name: avatar.name,
+            type: avatar.mimeType,
+          } as any);
+        }
+        await api.postForm('/api/users/me/avatar', formData);
+        setAvatar(null);
+      }
+      await refetchUser();
+      Alert.alert('Success', 'Profile updated');
+    } catch (e: any) {
+      Alert.alert('Error saving profile', e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const updateSetting = async (key: keyof Settings, value: any) => {
     if (!settings) return;
@@ -53,11 +100,34 @@ export default function SettingsScreen() {
     }
   };
 
-  if (loading || !settings) return <ActivityIndicator style={{ marginTop: 24 }} />;
+  if (loading || !settings || !user) return <ActivityIndicator style={{ marginTop: 24 }} />;
 
   return (
     <View style={styles.container}>
       {saving && <ActivityIndicator style={styles.savingIndicator} />}
+
+      <Text style={styles.header}>Profile Settings</Text>
+      <View style={styles.avatarContainer}>
+        <Image
+          source={{ uri: avatar?.uri || user.avatar_url }}
+          style={styles.avatar}
+          key={avatar?.uri || user.avatar_url}
+        />
+        <TouchableOpacity style={styles.pickerButton} onPress={pickAvatar}>
+          <Text>{avatar ? `Image: ${avatar.name}` : 'Change Picture'}</Text>
+        </TouchableOpacity>
+      </View>
+      <TextInput
+        style={styles.input}
+        value={name}
+        onChangeText={setName}
+        placeholder="Display Name"
+      />
+      <TouchableOpacity style={styles.saveButton} onPress={saveProfile} disabled={saving}>
+        <Text style={styles.saveButtonText}>Save Profile</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.header}>General Settings</Text>
       <View style={styles.settingRow}>
         <Text style={styles.settingLabel}>Record watch history</Text>
         <Switch
@@ -100,6 +170,51 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
+  header: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 16,
+  },
+  avatarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#eee',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  pickerButton: {
+    padding: 12,
+    backgroundColor: '#eee',
+    borderRadius: 8,
+    alignItems: 'center',
+    flex: 1,
+  },
+  saveButton: {
+    backgroundColor: '#ff0000',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

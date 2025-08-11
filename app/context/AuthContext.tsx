@@ -15,6 +15,7 @@ export type AuthContextType = AuthState & {
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   skipAuth: () => void;
+  refetchUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,9 +80,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState({ token: null, user: null, loading: false });
   }, []);
 
+  const refetchUser = useCallback(async () => {
+    try {
+      const user = await api.get('/api/users/me');
+      setState((s) => ({ ...s, user }));
+    } catch (e) {
+      console.error('Failed to refetch user info', e);
+      // Token might be invalid, so sign out
+      await signOut();
+    }
+  }, [signOut]);
+
   const value = useMemo(
-    () => ({ ...state, signIn, signUp, signOut, skipAuth }), 
-    [state, signIn, signUp, signOut, skipAuth]
+    () => ({ ...state, signIn, signUp, signOut, skipAuth, refetchUser }),
+    [state, signIn, signUp, signOut, skipAuth, refetchUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

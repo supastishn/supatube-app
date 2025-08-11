@@ -67,13 +67,13 @@ const getAllVideos = async (req, res) => {
     let query;
     if (process.env.NODE_ENV === 'test') {
       query = `
-        SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel, 0 as likes_count
+        SELECT v.*, json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel, 0 as likes_count
         FROM videos v
         JOIN users u ON v.user_id = u.id
       `;
     } else {
       query = `
-        SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel,
+        SELECT v.*, json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel,
         (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count
         FROM videos v
         JOIN users u ON v.user_id = u.id
@@ -134,7 +134,7 @@ const getVideoById = async (req, res) => {
             let videoQuery;
             if (process.env.NODE_ENV === 'test') {
               videoQuery = `
-                SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel,
+                SELECT v.*, json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel,
                 0 as likes_count,
                 ${userId ? '($2 IS NOT NULL)' : 'false'} as user_has_liked,
                 false as user_has_subscribed
@@ -144,7 +144,7 @@ const getVideoById = async (req, res) => {
               `;
             } else {
               videoQuery = `
-                SELECT v.*, json_build_object('id', u.id, 'name', u.username, 'avatar_url', u.avatar_url) as channel,
+                SELECT v.*, json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel,
                 (SELECT COUNT(*) FROM likes WHERE video_id = v.id)::int as likes_count,
                 ${userId ? 'EXISTS(SELECT 1 FROM likes WHERE video_id = v.id AND user_id = $2)' : 'false'} as user_has_liked,
                 ${userId ? 'EXISTS(SELECT 1 FROM subscriptions WHERE channel_id = v.user_id AND subscriber_id = $2)' : 'false'} as user_has_subscribed
@@ -211,7 +211,7 @@ const getCommentsForVideo = async (req, res) => {
         let sql;
         if (process.env.NODE_ENV === 'test') {
           sql = `SELECT c.*, 
-                    u.username,
+                    u.name as username,
                     0 AS likes_count,
                     ${req.user ? '($2 IS NOT NULL)' : 'false'} AS user_has_liked
              FROM comments c JOIN users u ON c.user_id = u.id
@@ -219,7 +219,7 @@ const getCommentsForVideo = async (req, res) => {
              ORDER BY c.created_at ASC`;
         } else {
           sql = `SELECT c.*, 
-                    u.username,
+                    u.name as username,
                     (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id)::int AS likes_count,
                     ${req.user ? `EXISTS(SELECT 1 FROM comment_likes cl2 WHERE cl2.comment_id = c.id AND cl2.user_id = $2)` : 'false'} AS user_has_liked
              FROM comments c JOIN users u ON c.user_id = u.id
@@ -264,7 +264,7 @@ const postComment = async (req, res) => {
         const newComment = result.rows[0];
 
         // Attach username to the new comment for the response
-        const userResult = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
+        const userResult = await pool.query('SELECT name as username FROM users WHERE id = $1', [userId]);
         newComment.username = userResult.rows[0].username;
 
         // If reply to a comment, notify parent comment author
@@ -605,7 +605,8 @@ const getRecommendedVideos = async (req, res) => {
 
         const isTest = process.env.NODE_ENV === 'test';
         const query = isTest
-            ? `SELECT v.id, v.title, v.thumbnail_url, v.views, v.created_at, u.username as channel
+            ? `SELECT v.id, v.title, v.thumbnail_url, v.views, v.created_at, 
+                 json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel
                FROM videos v
                JOIN users u ON v.user_id = u.id
                WHERE v.id != $1 AND v.visibility = 'public'
@@ -617,7 +618,8 @@ const getRecommendedVideos = async (req, res) => {
                 WHERE id = $1
             )
             SELECT
-                v.id, v.title, v.thumbnail_url, v.views, v.created_at, u.username as channel,
+                v.id, v.title, v.thumbnail_url, v.views, v.created_at, 
+                json_build_object('id', u.id, 'name', u.name, 'avatar_url', u.avatar_url) as channel,
                 (
                     (CASE WHEN v.user_id = (SELECT user_id FROM source_video) THEN 1 ELSE 0 END) * 1.5 +
                     ts_rank(v.search_vector, websearch_to_tsquery('english', (SELECT title FROM source_video))) +

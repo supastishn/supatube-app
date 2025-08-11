@@ -54,7 +54,7 @@ async function listNotifications(userId, { onlyUnread }) {
   const where = ['user_id = $1'];
   const params = [userId];
   if (onlyUnread) where.push('is_read = false');
-  const sql = `SELECT n.*, u.username as actor_username
+  const sql = `SELECT n.*, u.name as actor_username
                FROM notifications n
                LEFT JOIN users u ON n.actor_user_id = u.id
                WHERE ${where.join(' AND ')}
