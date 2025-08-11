@@ -8,7 +8,7 @@ import Slider from '@react-native-community/slider';
 
 export default function VideoPlayer({ id }: { id: string }) {
   const video = useRef<Video>(null);
-  const [status, setStatus] = useState<VideoProps['onPlaybackStatusUpdate']>({});
+  const [status, setStatus] = useState<any>({});
   const [showControls, setShowControls] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +29,8 @@ export default function VideoPlayer({ id }: { id: string }) {
 
   const handleLoad = (payload: any) => {
     setLoading(false);
-    if (payload.status.isPlaying !== undefined) {
-      setStatus(payload.status);
+    if (payload.isLoaded) {
+      setStatus(payload);
     }
   };
 
@@ -64,8 +64,8 @@ export default function VideoPlayer({ id }: { id: string }) {
             isLooping={false}
             onPlaybackStatusUpdate={setStatus as any}
             onLoadStart={handleLoadStart}
-            onLoad={(e) => handleLoad(e as any)}
-            onError={(e: any) => handleError(e.nativeEvent.message)}
+            onLoad={handleLoad}
+            onError={handleError}
           />
 
           {loading && (
