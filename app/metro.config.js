@@ -24,6 +24,8 @@ config.resolver.nodeModulesPaths = [
 config.resolver.blockList = [
   new RegExp(`${workspaceRoot}/backend/.*`),
   new RegExp(`${workspaceRoot}/.git/.*`),
+  new RegExp(`${projectRoot}/.expo/.*`),
+  /.*[\\\/]node_modules[\\\/].*/,
 ];
 
 module.exports = config;
