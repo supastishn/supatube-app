@@ -11,9 +11,9 @@ const config = getDefaultConfig(projectRoot);
 // This configuration is for a workspace-like setup where `npm install` is run at the root,
 // and you run the app from the `app` directory.
 
-// 1. Watch only files in the project root (`app` directory). This prevents watching
-// the root node_modules and helps avoid the ENOSPC error.
-config.watchFolders = [projectRoot];
+// 1. Watch all files in the workspace. This is necessary for Metro to resolve
+// dependencies hoisted to the root `node_modules` folder.
+config.watchFolders = [workspaceRoot];
 
 // 2. Let Metro know where to resolve packages from. This is for dependencies hoisted
 // to the root `node_modules` by npm workspaces.
