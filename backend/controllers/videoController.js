@@ -454,7 +454,7 @@ const streamVideo = async (req, res) => {
     console.log(`[streamVideo] Headers: ${JSON.stringify(req.headers)}`);
 
     try {
-        const result = await pool.query("SELECT id, user_id, video_url, visibility FROM videos WHERE id = $1", [id]);
+        const result = await pool.query("SELECT id, user_id, video_url, visibility, processing_status, video_480p_url FROM videos WHERE id = $1", [id]);
         if (result.rowCount === 0) {
             console.log(`[streamVideo] DB NOT FOUND: No video found for id=${id}`);
             return res.status(404).json({ error: 'Video not found' });
@@ -466,8 +466,17 @@ const streamVideo = async (req, res) => {
             console.log(`[streamVideo] AUTHZ FAILED: Private video access denied. owner=${video.user_id}, requester=${requesterId}`);
             return res.status(403).json({ error: 'This video is private' });
         }
+        
+        if (video.processing_status === 'processing' || video.processing_status === 'uploaded') {
+            return res.status(425).json({ error: 'Video is still processing. Please try again later.' });
+        }
 
-        const fileUrl = video.video_url;
+        if (video.processing_status === 'failed') {
+            return res.status(500).json({ error: 'Video processing failed.' });
+        }
+
+        // Prioritize serving the transcoded version
+        const fileUrl = video.video_480p_url || video.video_url;
         if (!fileUrl) {
             console.log(`[streamVideo] FILE URL MISSING: video.video_url is null or empty for id=${id}`);
             return res.status(404).json({ error: 'Video file URL not found in database' });
