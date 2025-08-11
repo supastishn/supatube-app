@@ -17,7 +17,7 @@ function getDefaultBaseUrl() {
   } else if (Platform.OS === 'ios') {
     // For iOS simulator, localhost works directly. For physical iOS devices, same as Android,
     // you'll need to use your computer's local network IP.
-    return 'http://localhost:3001';
+    return 'http://127.0.0.1:3001';
   }
 
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -27,7 +27,7 @@ function getDefaultBaseUrl() {
   }
 
   // fallback for iOS simulator
-  return 'http://localhost:3001';
+  return 'http://127.0.0.1:3001';
 }
 
 export const BASE_URL = getDefaultBaseUrl();
