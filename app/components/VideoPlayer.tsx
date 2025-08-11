@@ -1,23 +1,30 @@
 import React, { useMemo, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Video, VideoView } from 'expo-video';
+import * as ExpoVideo from 'expo-video';
 import { videoStreamUrl } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 export default function VideoPlayer({ id }: { id: string }) {
-  const ref = useRef<VideoView>(null);
+  const ref = useRef<ExpoVideo.VideoView>(null);
   const { token } = useAuth();
-  const source = useMemo(() => ({
-    uri: videoStreamUrl(id),
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  }), [id, token]);
+  const source = useMemo<ExpoVideo.VideoSource>(() => {
+    const src: ExpoVideo.VideoSource = {
+      uri: videoStreamUrl(id),
+    };
+    if (token) {
+      src.headers = {
+        Authorization: `Bearer ${token}`,
+      };
+    }
+    return src;
+  }, [id, token]);
 
   return (
     <View style={styles.container}>
-      <Video
+      <ExpoVideo.Video
         ref={ref}
         style={styles.video}
-        source={source as any}
+        source={source}
         useNativeControls
         resizeMode="contain"
         shouldPlay
