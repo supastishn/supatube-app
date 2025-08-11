@@ -485,6 +485,11 @@ const streamVideo = async (req, res) => {
         const filePath = path.resolve(__dirname, '..', 'uploads', path.basename(fileUrl));
         console.log(`[streamVideo] RESOLVED PATH: Serving file from ${filePath}`);
 
+        // Set headers for content type and to allow cross-origin requests, which is crucial for web.
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        const mimeType = getMimeFromExt(filePath);
+        res.setHeader('Content-Type', mimeType);
+
         // Use res.sendFile, which is more robust as it handles range requests automatically.
         // It will correctly send 206 Partial Content responses when the client requests them.
         res.sendFile(filePath, (err) => {
