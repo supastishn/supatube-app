@@ -5,8 +5,12 @@ import { getValueFor } from './storage';
 const TOKEN_KEY = 'auth_token';
 
 function getDefaultBaseUrl() {
+
   // Hardcoded production backend URL
-  return 'https://supatube.supastishn.hackclub.com';
+  return 'https://supatube.supastishn.hackclub.app';
+
+
+
 }
 
 export const BASE_URL = getDefaultBaseUrl();
