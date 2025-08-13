@@ -22,7 +22,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "single-page-app",
+      "output": "static",
       "favicon": "./assets/images/favicon.png",
       "router": {
         "type": "hash"
