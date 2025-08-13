@@ -26,7 +26,7 @@ jobs:
 
       - name: Build web app
         run: |
-          npx expo export --platform web --no-pwa
+          npx expo export --platform web
 
       - name: Add .nojekyll to output
         run: touch dist/.nojekyll
